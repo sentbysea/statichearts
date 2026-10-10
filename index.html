@@ -56,13 +56,52 @@
     height: 100%;
     display: block;
   }
+  /* 제목 전용 얇은 산세리프: Inter 가변 글꼴에서 STATICHEARTS 여덟 글자만 뽑은 것 (SIL OFL 1.1) */
+  @font-face {
+    font-family: "SH Title";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: block;
+    src: url(data:font/woff2;base64,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) format("woff2");
+  }
   #type text {
     fill: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
-    font-weight: 500;
+    font-family: "SH Title", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    font-weight: 300;
     text-rendering: geometricPrecision;
     font-kerning: normal;
   }
+  /* 소리 켜기·끄기: 화면 구석의 아주 작은 글자 하나 */
+  #snd {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 14px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    z-index: 2;
+    margin: 0;
+    padding: 10px 6px;
+    border: 0;
+    background: none;
+    color: var(--ghost);
+    font: 300 10px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    letter-spacing: 0.16em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #snd[hidden] { display: none; }
+  /* 유튜브 플레이어는 소리만 쓴다: 화면에는 보이지 않게 둔다 */
+  #yt {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+  #snd:focus { outline: none; }
+  #snd:focus-visible { outline: 1px solid var(--ghost); outline-offset: 2px; }
   #measure { visibility: hidden; }
   .sr {
     position: absolute;
@@ -87,6 +126,8 @@
     </svg>
   </div>
 </div>
+<button id="snd" type="button" hidden aria-pressed="false">SOUND OFF</button>
+<div id="yt" aria-hidden="true"></div>
 <script>
 (() => {
   'use strict';
@@ -222,6 +263,112 @@
 
   const egg = { phase: 'off', t0: 0, last: -1, edges: new Map(), lastAct: 0, doneAt: 0, fadeFrom: 0, fadeAlpha: 1 };
 
+  // ───────────────────────── 음악 (유튜브 IFrame Player) ─────────────────────────
+  // 유튜브 음원은 페이지에서 읽을 수 없다. 아래 떨림은 소리 분석이 아니라
+  // '재생 중인가'만 따르는 정전기 효과다: 재생하면 지지직거리고, 정지하면 기본 떨림으로 가라앉는다.
+  const YT_ID = '5dden6Vqj4A';
+  const NB = 28;                       // 높이별 떨림 세기 칸 (봉우리 → 아래 끝)
+  const sndBtn = $('snd');
+  const A = {
+    player: null, ready: false, failed: false,
+    on: false,                         // 실제로 재생 중 (PLAYING 상태)
+    firstGesture: true,                // 자동재생이 막혔을 때 첫 터치로 시작
+    tryTimer: 0,
+    gate: 0,                           // 재생 여부를 부드럽게 따라가는 값 0..1
+    wander: 0, burst: 0,
+    level: 0,                          // 떨림 세기 0..1
+    band: new Float32Array(NB),        // 높이별 세기 0..1
+    drift: new Float32Array(NB),
+    onset: 0, onsetBand: 0, lastT: 0,
+  };
+
+  function setSound(on) {
+    A.on = on;
+    sndBtn.textContent = on ? 'SOUND ON' : 'SOUND OFF';
+    sndBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    sndBtn.setAttribute('aria-label', on ? '소리 끄기' : '소리 켜기');
+    kick();
+  }
+
+  // 재생을 요청하고, 잠시 뒤에도 재생 중이 아니면 브라우저가 막은 것으로 보고 되돌린다
+  function startSound() {
+    const p = A.player;
+    if (!A.ready || A.failed || A.on) return;
+    try { p.unMute(); p.setVolume(100); p.playVideo(); } catch (_) { return; }
+    clearTimeout(A.tryTimer);
+    A.tryTimer = setTimeout(() => {
+      if (!A.on) { try { p.pauseVideo(); } catch (_) {} setSound(false); }
+    }, 2500);
+  }
+  function stopSound() {
+    clearTimeout(A.tryTimer);
+    try { A.player.pauseVideo(); } catch (_) {}
+    setSound(false);
+  }
+
+  function loadPlayer() {
+    window.onYouTubeIframeAPIReady = () => {
+      A.player = new YT.Player('yt', {
+        videoId: YT_ID,
+        width: 200, height: 200,
+        playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, loop: 1, playlist: YT_ID },
+        events: {
+          onReady: () => {
+            A.ready = true;
+            sndBtn.hidden = false;
+            if (A.firstGesture) startSound();          // 접속 즉시 소리 있는 재생 시도
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PLAYING) {
+              clearTimeout(A.tryTimer);
+              A.firstGesture = false;
+              setSound(true);
+            } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+              if (!document.hidden) setSound(false);
+            }
+          },
+          onError: () => { A.failed = true; sndBtn.hidden = true; setSound(false); },
+        },
+      });
+    };
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.async = true;
+    s.onerror = () => { A.failed = true; };
+    document.head.appendChild(s);
+  }
+
+  // 매 렌더 직전: 재생 상태에서 떨림 세기를 만든다 (임의 잡음 — 음악 박자와는 무관)
+  function stepStatic(now) {
+    const dt = A.lastT ? Math.min(100, now - A.lastT) : 33;
+    A.lastT = now;
+    A.gate += ((A.on ? 1 : 0) - A.gate) * (1 - Math.exp(-dt / (A.on ? 260 : 420)));
+    A.onset = 0;
+    if (A.gate < 0.003 && !A.on) {
+      A.gate = 0; A.level = 0; A.burst = 0; A.band.fill(0);
+      return;
+    }
+    // 세기는 천천히 흔들리고, 가끔 짧게 튄다
+    A.wander += (Math.random() * 2 - 1) * 0.18 * (dt / 33) - A.wander * 0.06;
+    A.wander = clamp(A.wander, -1, 1);
+    if (Math.random() < dt / 1000 * 3.2) {
+      A.burst = Math.max(A.burst, 0.55 + Math.random() * 0.45);
+      A.onset = A.burst;
+      A.onsetBand = Math.floor(Math.random() * NB);
+    }
+    A.burst *= Math.exp(-dt / 130);
+    A.level = A.gate * clamp(0.56 + 0.14 * A.wander + 0.34 * A.burst, 0, 1);
+    for (let k = 0; k < NB; k++) {
+      A.drift[k] += (Math.random() * 2 - 1) * 0.2 - A.drift[k] * 0.08;
+      A.drift[k] = clamp(A.drift[k], -1, 1);
+    }
+    for (let k = 0; k < NB; k++) {
+      const d = (A.drift[Math.max(0, k - 1)] + A.drift[k] * 2 + A.drift[Math.min(NB - 1, k + 1)]) / 4;
+      A.band[k] = clamp(0.5 + 0.35 * d, 0, 1);
+    }
+  }
+  const audioLive = () => A.on || A.gate > 0.003;
+
   // 단위 좌표 경계 (형태가 고정이므로 한 번만)
   const unitAll = sampleSegs(WIND_SEGS).concat(sampleSegs([TEXT_SEG]), sampleSegs(LIGHT_SEGS));
   const UB = unitAll.reduce((b, p) => ({
@@ -328,6 +475,16 @@
     Object.assign(light, { kind: 'light', base: 0.32, peak: 4.8, knot: 2, off: new Float32Array(light.n) });
     G.wind = wind; G.light = light;
     G.sigma = clamp(S * 0.075, 22, 40);
+
+    // 음악 재생 중 떨림: 높이에 따라 칸을 나눈다 (봉우리 = 굵은 물결, 아래 끝 = 잔떨림).
+    // 높이만 쓰므로 좌우 윤곽이 같은 높이에서 같은 세기를 받아 대칭으로 떨린다.
+    const yTop = oy + UB.y0 * S, yBot = oy + UB.y1 * S;
+    for (const ln of [wind, light]) {
+      ln.fu = new Float32Array(ln.n);
+      for (let i = 0; i < ln.n; i++) ln.fu[i] = clamp((ln.y[i] - yTop) / (yBot - yTop), 0, 1);
+    }
+    G.audPeak = clamp(S * 0.017, 3.4, 7);     // 재생 중 가장 센 떨림 폭(px)
+    G.audMax = G.audPeak * 1.45;              // 윤곽이 무너지지 않도록 상한
     glitches.length = 0;
 
     // 글자 손가락 판정용 구간
@@ -385,6 +542,19 @@
       }
       nextGlitch = now + 40 + Math.random() * 150;
     }
+    // 재생 중: 가끔 튀는 순간, 같은 높이의 양쪽 윤곽이 함께 어긋난다
+    if (A.onset > 0) {
+      const tu = A.onsetBand / (NB - 1);
+      const count = 1 + Math.round(A.onset * 2 * A.level);
+      for (const line of [wind, light]) {
+        const cand = [];
+        for (let i = 0; i < line.n; i += 2) if (Math.abs(line.fu[i] - tu) < 0.035 && line.wt[i] > 0.5) cand.push(i);
+        for (let c = 0; c < count && cand.length; c++) {
+          const i = cand[Math.floor(Math.random() * cand.length)];
+          spawnGlitch(line, now, line.s[i], A.level > 0.35);
+        }
+      }
+    }
     // 손가락: 가까운 구간에서 더 자주, 더 크게
     if (e > 0.05 && pressed) {
       nearGlitch -= dt * e * 0.05;      // 최대 초당 약 50번
@@ -406,18 +576,41 @@
     return { s, d: Math.sqrt(best) };
   }
 
+  // 재생 중 떨림용 굵은 잡음 (위쪽은 조금 더 긴 물결, 아래쪽은 표본마다 촘촘히)
+  const COARSE_K = 4;
+  let coarseBuf = new Float32Array(512);
+  function fillCoarse(n, rnd) {
+    if (coarseBuf.length < n) coarseBuf = new Float32Array(n * 2);
+    for (let k = 0; k < n; k++) coarseBuf[k] = rnd() * 2 - 1;
+  }
+
   function computeOffsets(line, e, rnd) {
     const { sigma } = G;
     const inv = 1 / (2 * sigma * sigma);
     const off = line.off, K = line.knot;
     fillKnots(Math.ceil(line.n / K) + 2, rnd);
+    const aud = A.level > 0.002;
+    const audScale = G.audPeak * A.level * (reduce ? 0.45 : 1);
+    if (aud) fillCoarse(Math.ceil(line.n / COARSE_K) + 2, rnd);
     for (let i = 0; i < line.n; i++) {
       let a = line.base;
       if (e > 0.002) {
         const dx = line.x[i] - pX, dy = line.y[i] - pY;
         a += e * line.peak * Math.exp(-(dx * dx + dy * dy) * inv);
       }
-      off[i] = noiseAt(line.kind, K, i) * a;
+      let o = noiseAt(line.kind, K, i) * a;
+      if (aud) {
+        const u = line.fu[i];
+        const bf = u * (NB - 1), b0 = Math.floor(bf), b1 = Math.min(NB - 1, b0 + 1);
+        const bv = A.band[b0] + (A.band[b1] - A.band[b0]) * (bf - b0);
+        const amp = audScale * (0.3 + 0.95 * bv * bv);
+        const k = Math.floor(i / COARSE_K), f = (i - k * COARSE_K) / COARSE_K;
+        const coarse = coarseBuf[k] + (coarseBuf[k + 1] - coarseBuf[k]) * f * f * (3 - 2 * f);
+        const fine = rnd() * 2 - 1;
+        o += amp * (coarse * (1 - u) * 0.7 + fine * (0.3 + 0.7 * u));
+        if (o > G.audMax) o = G.audMax; else if (o < -G.audMax) o = -G.audMax;
+      }
+      off[i] = o;
     }
     // 어긋남: 구간 전체가 한쪽으로 밀리고, 그 위에 거친 잡음이 얹힌다
     for (const g of glitches) {
@@ -442,6 +635,10 @@
     const e = energy * (egg.phase === 'off' ? 1 : 0.25);
     computeOffsets(wind, e, rnd);
     computeOffsets(light, e, rnd);
+    let sum = 0;
+    for (let j = 0; j < wind.n; j++) sum += Math.abs(wind.off[j]);
+    for (let j = 0; j < light.n; j++) sum += Math.abs(light.off[j]);
+    G.meanOff = sum / (wind.n + light.n);
     ctx.globalAlpha = 1;
     ctx.strokeStyle = INK;
 
@@ -654,7 +851,7 @@
   }
 
   function needsLoop() {
-    return !reduce || energy > 0.002 || pressed || egg.phase !== 'off';
+    return !reduce || energy > 0.002 || pressed || egg.phase !== 'off' || audioLive();
   }
 
   function frame(now) {
@@ -677,6 +874,7 @@
 
     // 정전기처럼: 약 30fps로 갱신 (어긋남은 2~5프레임 동안만 남는다)
     if (now - lastFrame >= 1000 / 30 - 2) {
+      stepStatic(now);
       stepGlitches(now, now - (lastFrame || now), energy * peakScale);
       lastFrame = now;
       const keep = energy;
@@ -708,6 +906,18 @@
   function cancelLongPress() {
     if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; }
   }
+
+  // 자동재생이 막혔다면 첫 터치에서 음악과 반응이 함께 시작된다.
+  // 터치의 pointerdown은 사용자 활성화가 아니므로 pointerup에서도 한 번 더 시도한다.
+  const gestureStart = () => { if (A.firstGesture && !A.on && !A.failed) startSound(); };
+  stage.addEventListener('pointerup', gestureStart);
+  stage.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse') gestureStart(); });
+
+  sndBtn.addEventListener('click', () => {
+    A.firstGesture = false;
+    if (!A.ready) return;
+    if (A.on) stopSound(); else startSound();
+  });
 
   stage.addEventListener('pointerdown', (e) => {
     if (pid !== null) return;
@@ -756,7 +966,9 @@
       lastNow = 0;
       pressed = false; pid = null; energy = 0;
       cancelLongPress();
+      if (A.on) { try { A.player.pauseVideo(); } catch (_) {} }   // 켜짐 상태는 그대로 두고 화면이 돌아오면 이어서
     } else {
+      if (A.on) { try { A.player.playVideo(); } catch (_) {} }
       kick();
     }
   });
@@ -778,8 +990,11 @@
     document.fonts.ready.then(boot);
   } else boot();
 
+  // 유튜브 플레이어를 불러오고, 준비되면 접속 즉시 소리 있는 재생을 시도한다
+  loadPlayer();
+
   // 검증용 훅 (UI에는 노출되지 않음)
-  window.__SH = { G, egg, get energy() { return energy; } };
+  window.__SH = { G, egg, A, get energy() { return energy; } };
 })();
 </script>
 </body>
