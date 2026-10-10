@@ -3,1028 +3,319 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6f6f4">
+<meta name="theme-color" content="#f5f5f5">
 <meta name="color-scheme" content="light">
-<title>STATICHEARTS</title>
+<title>Vibe ♡ Echo</title>
 <style>
-  :root {
-    --bg: #f6f6f4;
-    --ink: #17191b;
-    --ghost: #83969b;
-  }
   html, body {
     margin: 0;
     height: 100%;
-    background: var(--bg);
+    background: #f5f5f5;
     overflow: hidden;
     overscroll-behavior: none;
+  }
+  /* 모눈 노트처럼 잔잔한 도트 */
+  body {
+    background-image: radial-gradient(circle, #c5ced5 0.9px, transparent 1.3px);
+    background-size: 26px 26px;
+    background-position: 13px 13px;
   }
   body {
     -webkit-user-select: none;
     user-select: none;
-    -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
-    -webkit-text-size-adjust: 100%;
   }
-  /* 브라우저 UI·노치를 뺀 실제 사용 영역. JS가 이 사각형의 중앙에 오브제를 둔다. */
-  #safe {
+  /* 실 한 가닥으로 쓰는 Statichearts */
+  /* 배경 선: 가장자리에 가는 실 (js/backdrop.js) */
+  #backdrop {
     position: fixed;
-    top: env(safe-area-inset-top, 0px);
-    right: env(safe-area-inset-right, 0px);
-    bottom: env(safe-area-inset-bottom, 0px);
-    left: env(safe-area-inset-left, 0px);
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
   }
-  /* 화면 전체가 손가락 영역. 버튼처럼 보이는 요소는 없다. */
-  #stage {
+  /* 타이포의 실과 같은 색·굵기 (굵기는 intro.js가 화면 크기에 맞춰 --thread-px로 알려 준다) */
+  #backdrop path { fill: none; stroke: #1d2126; stroke-width: var(--thread-px, 2.4px); stroke-linecap: round; }
+  #intro {
     position: fixed;
     inset: 0;
     touch-action: none;
-    cursor: default;
   }
-  #obj {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
+  #intro svg { display: block; width: 100%; height: 100%; }
+  /* 실·되돌림 획·케이블은 모두 같은 두께 */
+  #intro .thread, #intro .cable, #intro .accent {
+    fill: none;
+    stroke: #1d2126;
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
-  #obj canvas, #obj svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+  /* i의 점: 실 위에 꿴 짧은 획 모양의 구슬 */
+  #intro .bead {
+    fill: #1d2126;
+    stroke: #1d2126;
+    stroke-width: 8;
+    transform-box: fill-box;
+    transform-origin: center;
   }
-  /* 제목 전용 얇은 산세리프: Inter 가변 글꼴에서 STATICHEARTS 여덟 글자만 뽑은 것 (SIL OFL 1.1) */
-  @font-face {
-    font-family: "SH Title";
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: block;
-    src: url(data:font/woff2;base64,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) format("woff2");
-  }
-  #type text {
-    fill: var(--ink);
-    font-family: "SH Title", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
-    font-weight: 300;
-    text-rendering: geometricPrecision;
-    font-kerning: normal;
-  }
-  /* 소리 켜기·끄기: 화면 구석의 아주 작은 글자 하나 */
-  #snd {
-    position: fixed;
-    right: calc(env(safe-area-inset-right, 0px) + 14px);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-    z-index: 2;
-    margin: 0;
-    padding: 10px 6px;
-    border: 0;
-    background: none;
-    color: var(--ghost);
-    font: 300 10px/1 "Helvetica Neue", "Segoe UI", Arial, sans-serif;
-    letter-spacing: 0.16em;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  #snd[hidden] { display: none; }
-  /* 유튜브 플레이어는 소리만 쓴다: 화면에는 보이지 않게 둔다 */
-  #yt {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 200px;
-    height: 200px;
+  /* 꽂는 순간 실을 타고 올라가는 신호 */
+  #intro .pulse {
+    fill: none;
+    stroke: #9db6c9;
+    stroke-width: 4.5;
+    stroke-linecap: round;
     opacity: 0;
     pointer-events: none;
-    z-index: -1;
   }
-  #snd:focus { outline: none; }
-  #snd:focus-visible { outline: 1px solid var(--ghost); outline-offset: 2px; }
-  #measure { visibility: hidden; }
-  .sr {
+  /* 플러그와 소켓 */
+  #intro .plug { outline: none; }
+  #intro .plug .boot { fill: #1d2126; }
+  #intro .plug .groove { stroke: #4a525b; stroke-width: 0.6; }
+  #intro .plug .metal { fill: url(#plug-metal); stroke: #4f565d; stroke-width: 0.35; }
+  #intro .plug .band { fill: #1d2126; }
+  #intro .plug:focus-visible .boot { fill: #3f6f93; }
+  #intro .socket { opacity: 0; transition: opacity 0.7s ease 0.2s; }
+  #intro .socket.on { opacity: 1; }
+  #intro .socket .ring { fill: #f5f5f5; stroke: #1d2126; stroke-width: 3.6; }
+  #intro .socket .hole { fill: #1d2126; transform-box: fill-box; transform-origin: center; }
+  #intro .socket.ready .hole { animation: socket-ready 1.3s ease-in-out infinite; }
+  @keyframes socket-ready { 50% { transform: scale(1.4); } }
+  @media (prefers-reduced-motion: reduce) {
+    #intro .socket.ready .hole { animation: none; transform: scale(1.3); }
+  }
+  #replay {
+    position: fixed;
+    z-index: 2;
+    right: calc(env(safe-area-inset-right, 0px) + 14px);
+    top: calc(env(safe-area-inset-top, 0px) + 16px);
+    padding: 6px 8px;
+    border: 0;
+    background: none;
+    color: #9aaab6;
+    font: 11px "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  #replay:hover { color: #3d4752; }
+  /* 가운데 무대: 정방형 사진과 그 아래 신호 패널(실 한 줄 + 문구)을 한 덩어리로 묶는다.
+     사진 한 변(--s)을 기준으로 실 폭·간격·높이를 모두 비율로 잡아, 화면 크기가 달라도 생김새가 그대로다.
+     화면 정중앙에 두되, 좁은 화면에선 글자 오른쪽 끝(--type-right, intro.js)을 넘지 않게 오른쪽으로 비켜난다 */
+  #stage {
+    position: fixed;
+    z-index: 1;
+    top: 50%;
+    --s: min(400px, 38vw, 47vh, calc((100vw - var(--type-right, 0px) - 44px) / 1.12));
+    width: calc(var(--s) * 1.12);
+    left: max(calc(50% - var(--s) * 0.56), calc(var(--type-right, 0px) + 28px));
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  #photo {
+    display: block;
+    width: var(--s);
+    height: var(--s);
+    margin: 0 auto;
+    object-fit: cover;
+    object-position: 50% 50%;
+    -webkit-user-drag: none;
+    opacity: 0;
+    /* 연결되기 전엔 어떤 사진이든 채도를 낮춰 바랜 듯이, 꽂으면 천천히 제 색이 돌아온다 */
+    filter: saturate(0.3) brightness(1.03);
+    transition: opacity 1.2s ease, filter 1.6s ease;
+  }
+  #photo.on { opacity: 1; }
+  /* 유튜브 곡을 들을 땐 사진 자리에 영상 창이 덮인다 (js/sound.js).
+     유튜브 정책상 플레이어는 숨길 수 없고 200×200px 이상이어야 해서, 작은 화면에서도 200px 밑으로는 줄지 않는다 */
+  #ytbox {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
+    z-index: 1;
+    top: 0;
+    left: 50%;
+    width: max(200px, var(--s));
+    height: max(200px, var(--s));
+    transform: translateX(-50%);
+    background: #1d2126;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: auto;
+    transition: opacity 0.8s ease, visibility 0s linear 0.8s;
   }
+  #ytbox.on { opacity: 1; visibility: visible; transition-delay: 0s; }
+  #ytbox iframe { display: block; width: 100%; height: 100%; border: 0; }
+  #photo.live { filter: none; }
+  /* 사진 테두리: 손으로 그은 찌글한 정사각형, 사진보다 조금 크게 */
+  #stage .frame {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--s) * -0.035);
+    left: calc(var(--s) * 0.025);
+    width: calc(var(--s) * 1.07);
+    height: calc(var(--s) * 1.07);
+    overflow: visible;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+  #photo.on + .frame { opacity: 1; }
+  #stage .frame path {
+    fill: none;
+    stroke: #1d2126;
+    stroke-width: max(1.3px, calc(var(--thread-px, 2.4px) * 0.62));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  /* 신호 패널 (js/signal.js): 꽂기 전엔 정적인 실 한 줄, 꽂으면 소리에 맞춰 출렁인다 */
+  /* 재생바 (js/signal.js): 시간·곡 목록 버튼 / 실 한 줄(= 진행 막대) / 낙서 아이콘 버튼 / 타자기 문구.
+     크기는 모두 사진 한 변(--s)에 비례 */
+  #signal {
+    position: relative;
+    margin-top: calc(var(--s) * 0.075);
+    color: #1d2126;
+    font: 700 max(10px, calc(var(--s) * 0.032))/1.4 "Courier New", Courier, monospace;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  #signal.on { opacity: 1; transition-delay: 0.4s; }
+  #signal button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #signal button:focus { outline: none; }
+  #signal button:focus-visible { outline: 1.5px dashed #1d2126; outline-offset: 3px; }
+  #signal svg { display: block; overflow: visible; }
+  /* 낙서 선: 실보다 조금 가는 손그림 획 (아이콘 칸 크기와 상관없이 같은 굵기) */
+  #signal .controls path, #signal .inf path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: max(1.3px, calc(var(--thread-px, 2.4px) * 0.62));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  #signal .more circle, #signal .head { fill: currentColor; }
+  #signal .meta { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 2px; }
+  #signal .end { display: flex; flex-direction: column; align-items: flex-end; }
+  #signal .more { width: 2.6em; height: 1.5em; margin: 0 -0.3em 0.1em 0; }
+  #signal .more svg { width: 100%; height: 100%; }
+  #signal .len { display: flex; align-items: center; min-height: 1.4em; }
+  #signal .inf svg { width: 2.8em; height: 1.9em; margin: -0.25em -0.3em -0.25em 0; }
+  #signal .inf[hidden] { display: none; }
+  /* 실 한 줄: 타이포와 같은 굵기. 끝이 있는 곡을 들을 땐 눌러서 위치를 옮길 수 있다 */
+  #signal .wire { width: 100%; height: calc(var(--s) * 0.14); }
+  #signal .wire path { fill: none; stroke: currentColor; stroke-width: var(--thread-px, 2.4px); stroke-linecap: round; stroke-linejoin: round; }
+  #signal .wire.seekable { pointer-events: auto; cursor: pointer; }
+  #signal .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: calc(var(--s) * 0.015);
+    padding: 0 calc(var(--s) * 0.03);
+  }
+  #signal .ctl { width: max(26px, calc(var(--s) * 0.1)); height: max(26px, calc(var(--s) * 0.1)); transition: opacity 0.3s ease, transform 0.15s ease; }
+  #signal .ctl svg { width: 100%; height: 100%; }
+  #signal .ctl.play { width: max(40px, calc(var(--s) * 0.17)); height: max(40px, calc(var(--s) * 0.17)); }
+  #signal .ctl:active { transform: scale(0.9); }
+  /* 플러그가 빠져 있으면 재생 버튼만 또렷하다 (누르면 플러그가 꽂힌다) */
+  #signal .controls.off .ctl:not(.play) { opacity: 0.25; }
+  #signal .controls:not(.off) .shuffle:not(.on), #signal .controls:not(.off) .repeat[data-mode="off"] { opacity: 0.4; }
+  #signal .repeat .one-mark { display: none; }
+  #signal .repeat[data-mode="one"] .one-mark { display: inline; }
+  /* 문구 칸은 한 줄 높이로 고정: 문구가 두 줄이 되거나 곡 목록이 열려도 아래로만 흘러넘치고, 사진·재생바 자리는 그대로다 */
+  #signal .foot { height: calc(var(--s) * 0.05 + 1.4em); }
+  #signal .caption {
+    margin: calc(var(--s) * 0.05) 0 0;
+    min-height: 1.4em;
+    text-align: center;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+  /* 곡 목록: 타자기 글씨, 지금 곡엔 손으로 그은 물결 밑줄 */
+  #signal .tracks { margin: calc(var(--s) * 0.035) 0 0; padding: 0; list-style: none; text-align: center; }
+  #signal .tracks button { padding: 0.2em 0.4em; opacity: 0.5; white-space: pre; }
+  #signal .tracks button:hover { opacity: 0.85; }
+  #signal .tracks button[aria-current] { opacity: 1; text-decoration: underline wavy; text-underline-offset: 0.3em; text-decoration-thickness: 1px; }
+  #signal .caret {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.05em;
+    margin-left: 1px;
+    vertical-align: -0.15em;
+    background: #1d2126;
+    animation: caret 1.06s steps(1) infinite;
+  }
+  @keyframes caret { 50% { opacity: 0; } }
+  /* 고리 안쪽의 색 덩어리 버튼 (b, 하트, o): 글자가 자리 잡으면 번지듯 나타나고, 올리거나 열려 있으면 살짝 부풀며 진해진다 */
+  #intro .blob {
+    opacity: 0;
+    pointer-events: none;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.9);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(.2, .8, .3, 1), filter 0.25s ease;
+  }
+  #intro .blob.live { opacity: 0.9; transform: none; }
+  #intro .blob.hover, #intro .blob.open { opacity: 1; transform: scale(1.05); filter: saturate(1.15); transition-duration: 0.25s; }
+  #intro .blob:focus { outline: none; }
+  #intro .blob:focus-visible { opacity: 1; transform: scale(1.05); }
+  /* 색 덩어리를 누르면 옆에 나오는 미니 탭 */
+  #tab {
+    position: fixed;
+    z-index: 3;
+    width: 220px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    padding: 14px 16px 16px;
+    background: #fff;
+    border: 1px solid #e3e9ee;
+    border-radius: 0;
+    box-shadow: 0 10px 28px rgba(29, 33, 38, 0.1);
+    color: #1d2126;
+    font: 13px/1.55 "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-6px) scale(0.97);
+    transform-origin: left center;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+  }
+  #tab.on { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  #tab .tab-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  #tab .tab-title { margin: 0; font-size: 11px; font-weight: 400; letter-spacing: 0.18em; color: #6b7a86; }
+  #tab .tab-close {
+    margin: -6px -8px -6px 0;
+    padding: 6px 8px;
+    border: 0;
+    background: none;
+    color: #9aaab6;
+    font: 16px/1 Arial, sans-serif;
+    cursor: pointer;
+  }
+  #tab .tab-close:hover { color: #3d4752; }
+  #tab .tab-body { margin: 0; }
 </style>
 </head>
 <body>
-<h1 class="sr">STATICHEARTS</h1>
-<div id="safe"></div>
+<svg id="backdrop" aria-hidden="true"></svg>
+<div id="intro" role="img" aria-label="Statichearts"></div>
+<button id="replay" type="button">REPLAY</button>
 <div id="stage">
-  <div id="obj">
-    <canvas id="fx"></canvas>
-    <svg id="type" aria-hidden="true" focusable="false">
-      <defs><path id="baseline" d="M0 0"/></defs>
-      <text id="measure" x="0" y="-100">STATICHEARTS</text>
-      <text id="title"><textPath id="tpath" href="#baseline" startOffset="0"><tspan id="tw">STATICHEARTS</tspan></textPath></text>
-    </svg>
-  </div>
+  <div id="ytbox"><div id="yt"></div></div>
+  <img id="photo"src="./img/cheek.png" alt="제복을 입은 두 사람이 볼을 맞대고 웃는 그림">
+  <div id="signal"></div>
 </div>
-<button id="snd" type="button" hidden aria-pressed="false">SOUND OFF</button>
-<div id="yt" aria-hidden="true"></div>
-<script>
-(() => {
-  'use strict';
-
-  const INK = '#17191b';
-  const GHOST = '#83969b';
-
-  const $ = (id) => document.getElementById(id);
-  const safeEl = $('safe'), stage = $('stage'), obj = $('obj');
-  const cvFx = $('fx');
-  const svg = $('type'), titleEl = $('title'), tpath = $('tpath'), baselineEl = $('baseline'), measureEl = $('measure'), twEl = $('tw');
-  const ctx = cvFx.getContext('2d');
-
-  // ───────────────────────── 형태 (단위 좌표, 하트 폭 ≈ 1) ─────────────────────────
-  // 윤곽은 오른쪽 절반 하나를 좌우로 뒤집어 쓴다 → 두 봉우리의 높이·너비·곡률이 같고 아래 끝은 x = 0.
-  const mir = (seg) => seg.map(([x, y]) => [-x, y]);
-  const rev = (seg) => seg.slice().reverse();
-  function splitBez(p, t) {
-    const L = (a, b) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-    const ab = L(p[0], p[1]), bc = L(p[1], p[2]), cd = L(p[2], p[3]);
-    const abc = L(ab, bc), bcd = L(bc, cd), m = L(abc, bcd);
-    return [[p[0], ab, abc, m], [m, bcd, cd, p[3]]];
-  }
-  const R_TOP = [[0.000, -0.250], [0.045, -0.330], [0.140, -0.470], [0.270, -0.470]];   // 골짜기 → 봉우리
-  const R_SIDE = [[0.270, -0.470], [0.420, -0.470], [0.520, -0.360], [0.520, -0.200]];  // 봉우리 → 바깥 최대폭
-  const R_LOW = [[0.520, -0.200], [0.522, 0.070], [0.300, 0.272], [0.000, 0.500]];      // 바깥 → 아래 끝 (바깥으로 부푼 곡선)
-  const [LOW_OUT, LOW_TIP] = splitBez(R_LOW, 0.24);
-
-  // 바람(홍지원): 하트 안쪽의 열린 끝에서 출발 → 골짜기에서 교차 → 왼쪽 봉우리 → 아래 끝
-  const WIND_SEGS = [
-    [[0.125, -0.040], [0.090, -0.105], [0.028, -0.200], [0.000, -0.250]],
-    mir(R_TOP), mir(R_SIDE), mir(R_LOW),
-  ];
-  // 글자 구간: 아래 끝 → 오른쪽 아래 윤곽 (STATICHEARTS가 선을 대신한다)
-  const TEXT_SEG = rev(LOW_TIP);
-  // 번개(차우연): 글자에서 이어받아 오른쪽 윤곽을 올라가 골짜기를 지나 짧게 끊긴다
-  const LIGHT_SEGS = [
-    rev(LOW_OUT), rev(R_SIDE), rev(R_TOP),
-    [[0.000, -0.250], [-0.022, -0.211], [-0.055, -0.150], [-0.080, -0.100]],
-  ];
-  // 번개 선의 짧은 꺾임 (f: 번개 구간 길이 비율, a: 법선 방향 진폭, w: 폭 — 단위 좌표)
-  // 바깥 윤곽 위의 꺾임은 거의 보이지 않을 만큼만, 안쪽 끝의 꺾임만 또렷하게.
-  const KINKS = [
-    { f: 0.200, a: 0.004, w: 0.026 },
-    { f: 0.945, a: 0.011, w: 0.032 },
-  ];
-  // 숨은 하트: 같은 윤곽을 살짝 돌리고 밀어낸 닫힌 곡선
-  const RING_SEGS = [WIND_SEGS[1], WIND_SEGS[2], WIND_SEGS[3], TEXT_SEG, LIGHT_SEGS[0], LIGHT_SEGS[1], LIGHT_SEGS[2]];
-  const RING_XFORM = { rot: -4.2 * Math.PI / 180, scale: 0.965, dx: 0.032, dy: 0.026 };
-  const DOT_COUNT = 10;
-
-  const WIND_W = 1.15;   // CSS px
-  const LIGHT_W = 1.35;
-
-  // ───────────────────────── 유틸 ─────────────────────────
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const bez = (p, t) => {
-    const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
-    return [a * p[0][0] + b * p[1][0] + c * p[2][0] + d * p[3][0], a * p[0][1] + b * p[1][1] + c * p[2][1] + d * p[3][1]];
-  };
-  function sampleSegs(segs, per = 160) {
-    const out = [];
-    segs.forEach((p, k) => {
-      for (let i = k === 0 ? 0 : 1; i <= per; i++) out.push(bez(p, i / per));
-    });
-    return out;
-  }
-  function mulberry32(a) {
-    return () => {
-      a |= 0; a = a + 0x6D2B79F5 | 0;
-      let t = Math.imul(a ^ a >>> 15, 1 | a);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-  }
-
-  // 픽셀 좌표 폴리라인을 일정 간격으로 다시 뽑는다. {x, y, s, n}
-  function resample(pts, step) {
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-    const L = cum[cum.length - 1];
-    const n = Math.max(2, Math.round(L / step) + 1);
-    const x = new Float32Array(n), y = new Float32Array(n), s = new Float32Array(n);
-    let j = 1;
-    for (let i = 0; i < n; i++) {
-      const target = (i / (n - 1)) * L;
-      while (j < cum.length - 1 && cum[j] < target) j++;
-      const seg = cum[j] - cum[j - 1] || 1;
-      const t = clamp((target - cum[j - 1]) / seg, 0, 1);
-      x[i] = pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * t;
-      y[i] = pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * t;
-      s[i] = target;
-    }
-    return { x, y, s, n, len: L };
-  }
-  function slice(line, s0, s1) {
-    const pts = [];
-    for (let i = 0; i < line.n; i++) if (line.s[i] >= s0 && line.s[i] <= s1) pts.push([line.x[i], line.y[i]]);
-    return pts;
-  }
-  // 법선: 진행 방향의 오른쪽(화면 좌표 y↓). 하트 윤곽에서는 대체로 바깥쪽.
-  function normals(line) {
-    const nx = new Float32Array(line.n), ny = new Float32Array(line.n);
-    for (let i = 0; i < line.n; i++) {
-      const a = Math.max(0, i - 2), b = Math.min(line.n - 1, i + 2);
-      let tx = line.x[b] - line.x[a], ty = line.y[b] - line.y[a];
-      const l = Math.hypot(tx, ty) || 1;
-      tx /= l; ty /= l;
-      nx[i] = -ty; ny[i] = tx;
-    }
-    line.nx = nx; line.ny = ny;
-    return line;
-  }
-  const kinkShape = (u) => {
-    // 날카로운 Z자: 0 → +1 → -0.55 → 0 (직선 구간, 모서리 유지)
-    if (u <= 0 || u >= 1) return 0;
-    if (u < 0.36) return u / 0.36;
-    if (u < 0.62) return 1 - (u - 0.36) / 0.26 * 1.55;
-    return -0.55 + (u - 0.62) / 0.38 * 0.55;
-  };
-
-  // ───────────────────────── 상태 ─────────────────────────
-  const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
-  let reduce = reduceMQ.matches;
-
-  const G = {};            // 레이아웃·형태 캐시
-  let raf = 0, lastFrame = 0, lastNow = 0;
-  let energy = 0;          // 간섭 세기 0..1
-  let pressed = false, pid = null, pX = -1e4, pY = -1e4, downX = 0, downY = 0;
-  let lpTimer = 0;
-  const glitches = [];     // 선의 짧은 구간이 어긋났다 돌아오는 사건들
-  let nextGlitch = 0, nearGlitch = 0;
-
-  const egg = { phase: 'off', t0: 0, last: -1, edges: new Map(), lastAct: 0, doneAt: 0, fadeFrom: 0, fadeAlpha: 1 };
-
-  // ───────────────────────── 음악 (유튜브 IFrame Player) ─────────────────────────
-  // 유튜브 음원은 페이지에서 읽을 수 없다. 아래 떨림은 소리 분석이 아니라
-  // '재생 중인가'만 따르는 정전기 효과다: 재생하면 지지직거리고, 정지하면 기본 떨림으로 가라앉는다.
-  const YT_ID = '5dden6Vqj4A';
-  const NB = 28;                       // 높이별 떨림 세기 칸 (봉우리 → 아래 끝)
-  const sndBtn = $('snd');
-  const A = {
-    player: null, ready: false, failed: false,
-    on: false,                         // 실제로 재생 중 (PLAYING 상태)
-    firstGesture: true,                // 자동재생이 막혔을 때 첫 터치로 시작
-    tryTimer: 0,
-    gate: 0,                           // 재생 여부를 부드럽게 따라가는 값 0..1
-    wander: 0, burst: 0,
-    level: 0,                          // 떨림 세기 0..1
-    band: new Float32Array(NB),        // 높이별 세기 0..1
-    drift: new Float32Array(NB),
-    onset: 0, onsetBand: 0, lastT: 0,
-  };
-
-  function setSound(on) {
-    A.on = on;
-    sndBtn.textContent = on ? 'SOUND ON' : 'SOUND OFF';
-    sndBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    sndBtn.setAttribute('aria-label', on ? '소리 끄기' : '소리 켜기');
-    kick();
-  }
-
-  // 재생을 요청하고, 잠시 뒤에도 재생 중이 아니면 브라우저가 막은 것으로 보고 되돌린다
-  function startSound() {
-    const p = A.player;
-    if (!A.ready || A.failed || A.on) return;
-    try { p.unMute(); p.setVolume(100); p.playVideo(); } catch (_) { return; }
-    clearTimeout(A.tryTimer);
-    A.tryTimer = setTimeout(() => {
-      if (!A.on) { try { p.pauseVideo(); } catch (_) {} setSound(false); }
-    }, 2500);
-  }
-  function stopSound() {
-    clearTimeout(A.tryTimer);
-    try { A.player.pauseVideo(); } catch (_) {}
-    setSound(false);
-  }
-
-  function loadPlayer() {
-    window.onYouTubeIframeAPIReady = () => {
-      A.player = new YT.Player('yt', {
-        videoId: YT_ID,
-        width: 200, height: 200,
-        playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, loop: 1, playlist: YT_ID },
-        events: {
-          onReady: () => {
-            A.ready = true;
-            sndBtn.hidden = false;
-            if (A.firstGesture) startSound();          // 접속 즉시 소리 있는 재생 시도
-          },
-          onStateChange: (e) => {
-            if (e.data === YT.PlayerState.PLAYING) {
-              clearTimeout(A.tryTimer);
-              A.firstGesture = false;
-              setSound(true);
-            } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
-              if (!document.hidden) setSound(false);
-            }
-          },
-          onError: () => { A.failed = true; sndBtn.hidden = true; setSound(false); },
-        },
-      });
-    };
-    const s = document.createElement('script');
-    s.src = 'https://www.youtube.com/iframe_api';
-    s.async = true;
-    s.onerror = () => { A.failed = true; };
-    document.head.appendChild(s);
-  }
-
-  // 매 렌더 직전: 재생 상태에서 떨림 세기를 만든다 (임의 잡음 — 음악 박자와는 무관)
-  function stepStatic(now) {
-    const dt = A.lastT ? Math.min(100, now - A.lastT) : 33;
-    A.lastT = now;
-    A.gate += ((A.on ? 1 : 0) - A.gate) * (1 - Math.exp(-dt / (A.on ? 260 : 420)));
-    A.onset = 0;
-    if (A.gate < 0.003 && !A.on) {
-      A.gate = 0; A.level = 0; A.burst = 0; A.band.fill(0);
-      return;
-    }
-    // 세기는 천천히 흔들리고, 가끔 짧게 튄다
-    A.wander += (Math.random() * 2 - 1) * 0.18 * (dt / 33) - A.wander * 0.06;
-    A.wander = clamp(A.wander, -1, 1);
-    if (Math.random() < dt / 1000 * 6) {
-      A.burst = Math.max(A.burst, 0.6 + Math.random() * 0.4);
-      A.onset = A.burst;
-      A.onsetBand = Math.floor(Math.random() * NB);
-    }
-    A.burst *= Math.exp(-dt / 130);
-    A.level = A.gate * clamp(0.68 + 0.16 * A.wander + 0.4 * A.burst, 0, 1.15);
-    for (let k = 0; k < NB; k++) {
-      A.drift[k] += (Math.random() * 2 - 1) * 0.2 - A.drift[k] * 0.08;
-      A.drift[k] = clamp(A.drift[k], -1, 1);
-    }
-    for (let k = 0; k < NB; k++) {
-      const d = (A.drift[Math.max(0, k - 1)] + A.drift[k] * 2 + A.drift[Math.min(NB - 1, k + 1)]) / 4;
-      A.band[k] = clamp(0.5 + 0.35 * d, 0, 1);
-    }
-  }
-  const audioLive = () => A.on || A.gate > 0.003;
-
-  // 단위 좌표 경계 (형태가 고정이므로 한 번만)
-  const unitAll = sampleSegs(WIND_SEGS).concat(sampleSegs([TEXT_SEG]), sampleSegs(LIGHT_SEGS));
-  const UB = unitAll.reduce((b, p) => ({
-    x0: Math.min(b.x0, p[0]), x1: Math.max(b.x1, p[0]), y0: Math.min(b.y0, p[1]), y1: Math.max(b.y1, p[1]),
-  }), { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 });
-
-  // ───────────────────────── 레이아웃 ─────────────────────────
-  function layout() {
-    const r = safeEl.getBoundingClientRect();
-    const vw = r.width || innerWidth, vh = r.height || innerHeight;
-    const S = clamp(Math.min(vw * 0.80, vh * 0.54, 460), 180, 460);
-    const margin = Math.ceil(S * 0.12 + 22);
-    const W = Math.ceil((UB.x1 - UB.x0) * S + margin * 2);
-    const H = Math.ceil((UB.y1 - UB.y0) * S + margin * 2);
-    const ox = margin - UB.x0 * S, oy = margin - UB.y0 * S;
-    const left = Math.round(r.left + vw / 2 - W / 2);
-    const top = Math.round(r.top + vh / 2 - H / 2 - vh * 0.012);   // 광학 중심: 아주 약간 위
-
-    Object.assign(G, { S, W, H, ox, oy, left, top });
-    obj.style.width = W + 'px';
-    obj.style.height = H + 'px';
-    obj.style.transform = `translate(${left}px, ${top}px)`;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    G.dpr = dpr;
-    for (const [cv, c] of [[cvFx, ctx]]) {
-      cv.width = Math.round(W * dpr);
-      cv.height = Math.round(H * dpr);
-      c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-    const toPx = (p) => [ox + p[0] * S, oy + p[1] * S];
-    const step = 1.5;
-    const windR = resample(sampleSegs(WIND_SEGS).map(toPx), step);
-    const textR = normals(resample(sampleSegs([TEXT_SEG], 400).map(toPx), 1));
-    const lightR = resample(sampleSegs(LIGHT_SEGS).map(toPx), step);
-
-    // ── 글자 크기: 작은 화면에서도 16~18px 이상, 과한 자간 없음
-    let fs = clamp(S * 0.058, 17, 25);
-    let ls = 0.05;
-    let textLen = 0;
-    const minLine = 10;
-    for (let guard = 0; guard < 40; guard++) {
-      setFont(measureEl, fs, ls);
-      textLen = measureEl.getComputedTextLength() - fs * ls; // 마지막 글자 뒤 자간 제외
-      const need = textLen + fs * 1.0 + minLine * 2;
-      if (need <= textR.len) break;
-      if (fs > 16) fs -= 0.5; else if (ls > 0) ls = Math.max(0, ls - 0.01); else break;
-    }
-    setFont(titleEl, fs, ls);
-    const gap = fs * 0.42;
-
-    // ── 글자 기준선: 윤곽선을 대문자 높이의 절반만큼 바깥으로 밀어, 글자의 가운데가 선 위에 오게 한다
-    const capHalf = fs * 0.355;
-    const bx = [], by = [], bs = [0];
-    for (let i = 0; i < textR.n; i++) {
-      bx.push(textR.x[i] + textR.nx[i] * capHalf);
-      by.push(textR.y[i] + textR.ny[i] * capHalf);
-      if (i) bs.push(bs[i - 1] + Math.hypot(bx[i] - bx[i - 1], by[i] - by[i - 1]));
-    }
-    let d = `M${bx[0].toFixed(2)} ${by[0].toFixed(2)}`;
-    for (let i = 2; i < textR.n; i += 2) d += `L${bx[i].toFixed(2)} ${by[i].toFixed(2)}`;
-    d += `L${bx[textR.n - 1].toFixed(2)} ${by[textR.n - 1].toFixed(2)}`;
-    baselineEl.setAttribute('d', d);
-
-    const a = (textR.len - textLen) / 2;                       // 윤곽선 위의 글자 시작 (가운데 정렬)
-    const ia = Math.round(a);                                  // textR 간격 1px
-    const sA = bs[clamp(ia, 0, bs.length - 1)];
-    tpath.setAttribute('startOffset', sA.toFixed(2));
-    let ib = ia;
-    while (ib < bs.length - 1 && bs[ib] < sA + textLen) ib++;
-    const b = textR.s[ib];
-    Object.assign(G, { fs, gap, textA: a, textB: b, textR });
-
-    // ── 바람 선 = 바람 + 글자 앞 윤곽 / 번개 선 = 글자 뒤 윤곽 + 번개
-    const windPts = slice(windR, 0, windR.len).concat(slice(textR, 0.5, a - gap));
-    const tailPts = slice(textR, b + gap, textR.len);
-    const lightPts = tailPts.concat(slice(lightR, 0.75, lightR.len));
-    const wind = normals(resample(windPts, step));
-    const light = normals(resample(lightPts, step));
-
-    // 번개 꺾임은 매끈한 법선을 기준으로 위치만 비튼다
-    const lightStart = light.len - lightR.len;
-    for (const k of KINKS) {
-      const c = lightStart + k.f * lightR.len, w = k.w * S, amp = k.a * S;
-      for (let i = 0; i < light.n; i++) {
-        const u = (light.s[i] - (c - w / 2)) / w;
-        const v = kinkShape(u);
-        if (v) { light.x[i] += light.nx[i] * amp * v; light.y[i] += light.ny[i] * amp * v; }
-      }
-    }
-
-    // 떨림 가중치: 글자와 만나는 끝은 0으로 잦아들어 선이 글자 기준선에 그대로 닿는다
-    const fadeLen = Math.max(18, fs * 1.3);
-    const ease = (v) => v * v * (3 - 2 * v);
-    wind.wt = new Float32Array(wind.n);
-    for (let i = 0; i < wind.n; i++) wind.wt[i] = ease(clamp((wind.len - wind.s[i]) / fadeLen, 0, 1));
-    light.wt = new Float32Array(light.n);
-    for (let i = 0; i < light.n; i++) light.wt[i] = ease(clamp(light.s[i] / fadeLen, 0, 1));
-
-    // base: 대기 중 미세 떨림(px), peak: 손가락 바로 아래 추가 떨림, knot: 잡음 상관 길이(표본 수)
-    Object.assign(wind, { kind: 'wind', base: 0.3, peak: 4.2, knot: 2, off: new Float32Array(wind.n) });
-    Object.assign(light, { kind: 'light', base: 0.32, peak: 4.8, knot: 2, off: new Float32Array(light.n) });
-    G.wind = wind; G.light = light;
-    G.sigma = clamp(S * 0.075, 22, 40);
-
-    // 음악 재생 중 떨림: 높이에 따라 칸을 나눈다 (봉우리 = 굵은 물결, 아래 끝 = 잔떨림).
-    // 높이만 쓰므로 좌우 윤곽이 같은 높이에서 같은 세기를 받아 대칭으로 떨린다.
-    const yTop = oy + UB.y0 * S, yBot = oy + UB.y1 * S;
-    for (const ln of [wind, light]) {
-      ln.fu = new Float32Array(ln.n);
-      for (let i = 0; i < ln.n; i++) ln.fu[i] = clamp((ln.y[i] - yTop) / (yBot - yTop), 0, 1);
-    }
-    G.audPeak = clamp(S * 0.03, 6, 12);       // 재생 중 가장 센 떨림 폭(px)
-    G.audMax = G.audPeak * 1.5;               // 윤곽이 무너지지 않도록 상한
-    glitches.length = 0;
-
-    // 글자 손가락 판정용 구간
-    G.textHit = Math.max(26, fs * 1.6);
-
-    buildRing();
-    resetEgg();
-    renderOnce();
-  }
-
-  function setFont(el, fs, ls) {
-    el.style.fontSize = fs + 'px';
-    el.style.letterSpacing = (fs * ls).toFixed(2) + 'px';
-  }
-
-  // ───────────────────────── 선 (매 프레임, 선 자체가 떨린다) ─────────────────────────
-  // 오프셋 = 미세 백색소음 + 짧은 구간 어긋남(glitch) + 손가락 근처 증폭. 윤곽 자체는 고정.
-  let knotBuf = new Float32Array(1024);
-
-  function fillKnots(n, rnd) {
-    if (knotBuf.length < n) knotBuf = new Float32Array(n * 2);
-    for (let k = 0; k < n; k++) knotBuf[k] = rnd() * 2 - 1;
-  }
-  // 상관 길이 K 표본의 잡음. 바람은 부드럽게, 번개는 각지게 잇는다.
-  function noiseAt(kind, K, i) {
-    const k = Math.floor(i / K), f = (i - k * K) / K;
-    const a = knotBuf[k], b = knotBuf[k + 1];
-    return a + (b - a) * (kind === 'wind' ? f * f * (3 - 2 * f) : f);
-  }
-
-  function spawnGlitch(line, now, at, strong, mult = 1) {
-    const hw = (strong ? 6 : 4) + Math.random() * (strong ? 12 : 9);     // 반폭, px
-    glitches.push({
-      line,
-      c: at,
-      hw,
-      a: ((strong ? 2.2 : 1.8) + Math.random() * (strong ? 2.6 : 1.8)) * mult,   // 진폭, px
-      sgn: Math.random() < 0.5 ? -1 : 1,
-      t0: now,
-      dur: (strong ? 50 : 60) + Math.random() * (strong ? 90 : 110),
-    });
-  }
-
-  function stepGlitches(now, dt, e) {
-    for (let k = glitches.length - 1; k >= 0; k--) if (now - glitches[k].t0 > glitches[k].dur) glitches.splice(k, 1);
-    if (reduce) { glitches.length = 0; return; }
-    const { wind, light } = G;
-    // 대기: 초당 약 9번, 어디선가 짧게 어긋난다
-    if (now >= nextGlitch) {
-      const line = Math.random() < 0.55 ? wind : light;
-      spawnGlitch(line, now, Math.random() * line.len, false);
-      if (Math.random() < 0.3) {
-        const other = line === wind ? light : wind;
-        spawnGlitch(other, now, Math.random() * other.len, false);
-      }
-      nextGlitch = now + 40 + Math.random() * 150;
-    }
-    // 재생 중: 가끔 튀는 순간, 같은 높이의 양쪽 윤곽이 함께 어긋난다
-    if (A.onset > 0) {
-      const tu = A.onsetBand / (NB - 1);
-      const count = 2 + Math.round(A.onset * 3 * A.level);
-      for (const line of [wind, light]) {
-        const cand = [];
-        for (let i = 0; i < line.n; i += 2) if (Math.abs(line.fu[i] - tu) < 0.035 && line.wt[i] > 0.5) cand.push(i);
-        for (let c = 0; c < count && cand.length; c++) {
-          const i = cand[Math.floor(Math.random() * cand.length)];
-          spawnGlitch(line, now, line.s[i], true, 1.8);
-        }
-      }
-    }
-    // 손가락: 가까운 구간에서 더 자주, 더 크게
-    if (e > 0.05 && pressed) {
-      nearGlitch -= dt * e * 0.05;      // 최대 초당 약 50번
-      while (nearGlitch < 0) {
-        nearGlitch += 1;
-        const line = Math.random() < 0.5 ? wind : light;
-        const at = nearestS(line, pX, pY);
-        if (at.d < G.sigma * 2.2) spawnGlitch(line, now, at.s + (Math.random() * 2 - 1) * G.sigma, true);
-      }
-    }
-  }
-
-  function nearestS(line, x, y) {
-    let best = Infinity, s = 0;
-    for (let i = 0; i < line.n; i += 3) {
-      const d = (line.x[i] - x) ** 2 + (line.y[i] - y) ** 2;
-      if (d < best) { best = d; s = line.s[i]; }
-    }
-    return { s, d: Math.sqrt(best) };
-  }
-
-  // 재생 중 떨림용 굵은 잡음 (위쪽은 조금 더 긴 물결, 아래쪽은 표본마다 촘촘히)
-  const COARSE_K = 4;
-  let coarseBuf = new Float32Array(512);
-  function fillCoarse(n, rnd) {
-    if (coarseBuf.length < n) coarseBuf = new Float32Array(n * 2);
-    for (let k = 0; k < n; k++) coarseBuf[k] = rnd() * 2 - 1;
-  }
-
-  function computeOffsets(line, e, rnd) {
-    const { sigma } = G;
-    const inv = 1 / (2 * sigma * sigma);
-    const off = line.off, K = line.knot;
-    fillKnots(Math.ceil(line.n / K) + 2, rnd);
-    const aud = A.level > 0.002;
-    const audScale = G.audPeak * A.level * (reduce ? 0.45 : 1);
-    if (aud) fillCoarse(Math.ceil(line.n / COARSE_K) + 2, rnd);
-    for (let i = 0; i < line.n; i++) {
-      let a = line.base;
-      if (e > 0.002) {
-        const dx = line.x[i] - pX, dy = line.y[i] - pY;
-        a += e * line.peak * Math.exp(-(dx * dx + dy * dy) * inv);
-      }
-      let o = noiseAt(line.kind, K, i) * a;
-      if (aud) {
-        const u = line.fu[i];
-        const bf = u * (NB - 1), b0 = Math.floor(bf), b1 = Math.min(NB - 1, b0 + 1);
-        const bv = A.band[b0] + (A.band[b1] - A.band[b0]) * (bf - b0);
-        const amp = audScale * (0.3 + 0.95 * bv * bv);
-        const k = Math.floor(i / COARSE_K), f = (i - k * COARSE_K) / COARSE_K;
-        const coarse = coarseBuf[k] + (coarseBuf[k + 1] - coarseBuf[k]) * f * f * (3 - 2 * f);
-        const fine = rnd() * 2 - 1;
-        o += amp * (coarse * (1 - u) * 0.7 + fine * (0.3 + 0.7 * u));
-        if (o > G.audMax) o = G.audMax; else if (o < -G.audMax) o = -G.audMax;
-      }
-      off[i] = o;
-    }
-    // 어긋남: 구간 전체가 한쪽으로 밀리고, 그 위에 거친 잡음이 얹힌다
-    for (const g of glitches) {
-      if (g.line !== line) continue;
-      const amp = g.a * (0.65 + rnd() * 0.35);
-      let k0 = 0;
-      while (k0 < line.n && line.s[k0] < g.c - g.hw) k0++;
-      for (let i = k0; i < line.n && line.s[i] <= g.c + g.hw; i++) {
-        const u = Math.abs(line.s[i] - g.c) / g.hw;
-        const env = u < 0.55 ? 1 : 1 - (u - 0.55) / 0.45;
-        off[i] += amp * env * (g.sgn * 0.75 + (rnd() * 2 - 1) * 0.6);
-      }
-    }
-    for (let i = 0; i < line.n; i++) off[i] *= line.wt[i];
-  }
-
-  const px = (line, i) => line.x[i] + line.nx[i] * line.off[i];
-  const py = (line, i) => line.y[i] + line.ny[i] * line.off[i];
-
-  function drawLines(now, rnd) {
-    const { wind, light } = G;
-    const e = energy * (egg.phase === 'off' ? 1 : 0.25);
-    computeOffsets(wind, e, rnd);
-    computeOffsets(light, e, rnd);
-    let sum = 0;
-    for (let j = 0; j < wind.n; j++) sum += Math.abs(wind.off[j]);
-    for (let j = 0; j < light.n; j++) sum += Math.abs(light.off[j]);
-    G.meanOff = sum / (wind.n + light.n);
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = INK;
-
-    // 바람: 안쪽의 열린 끝은 가늘게 사라지고, 나머지는 한 획
-    const taper = Math.max(24, G.S * 0.09);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    let i = 1;
-    for (; i < wind.n && wind.s[i] < taper; i++) {
-      const t = wind.s[i] / taper;
-      ctx.lineWidth = WIND_W * (0.18 + 0.82 * t * t * (3 - 2 * t));
-      ctx.beginPath();
-      ctx.moveTo(px(wind, i - 1), py(wind, i - 1));
-      ctx.lineTo(px(wind, i), py(wind, i));
-      ctx.stroke();
-    }
-    ctx.lineWidth = WIND_W;
-    ctx.beginPath();
-    ctx.moveTo(px(wind, i - 1), py(wind, i - 1));
-    for (; i < wind.n; i++) ctx.lineTo(px(wind, i), py(wind, i));
-    ctx.stroke();
-
-    // 번개: 끝이 칼같이 잘린다
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'miter';
-    ctx.miterLimit = 6;
-    ctx.lineWidth = LIGHT_W;
-    ctx.beginPath();
-    ctx.moveTo(px(light, 0), py(light, 0));
-    for (let j = 1; j < light.n; j++) ctx.lineTo(px(light, j), py(light, j));
-    ctx.stroke();
-  }
-
-  // ───────────────────────── 숨은 하트 ─────────────────────────
-  function buildRing() {
-    const { S, ox, oy } = G;
-    const { rot, scale, dx, dy } = RING_XFORM;
-    const cx = (UB.x0 + UB.x1) / 2, cy = (UB.y0 + UB.y1) / 2;
-    const cs = Math.cos(rot), sn = Math.sin(rot);
-    const pts = sampleSegs(RING_SEGS).map(([x, y]) => {
-      const u = (x - cx) * scale, v = (y - cy) * scale;
-      return [ox + (cx + u * cs - v * sn + dx) * S, oy + (cy + u * sn + v * cs + dy) * S];
-    });
-    pts.push(pts[0]);
-    const ring = resample(pts, 1.5);
-    // 글자 위로는 지나가지 않는다: 제목 둘레의 링 구간은 비워 둔다
-    const { textR, textA, textB, fs } = G;
-    const clear2 = (fs * 0.95) ** 2;
-    ring.blocked = new Uint8Array(ring.n);
-    for (let i = 0; i < ring.n; i++) {
-      for (let j = 0; j < textR.n; j += 2) {
-        if (textR.s[j] < textA - fs * 0.4 || textR.s[j] > textB + fs * 0.4) continue;
-        if ((textR.x[j] - ring.x[i]) ** 2 + (textR.y[j] - ring.y[i]) ** 2 < clear2) { ring.blocked[i] = 1; break; }
-      }
-    }
-    // 점은 비워 둔 구간을 뺀 윤곽 위에 고르게 놓는다 (순환 순서 유지)
-    const free = [];
-    for (let i = 0; i < ring.n - 1; i++) if (!ring.blocked[i]) free.push(i);
-    const dots = [];
-    for (let k = 0; k < DOT_COUNT; k++) {
-      const i = free[Math.floor(((k + 0.35) / DOT_COUNT) * free.length)];
-      dots.push({ x: ring.x[i], y: ring.y[i], s: ring.s[i], i });
-    }
-    G.ring = ring;
-    G.dots = dots;
-    G.dotHit = Math.max(22, S * 0.065);
-  }
-
-  function resetEgg() {
-    egg.phase = 'off';
-    egg.edges.clear();
-    egg.last = -1;
-  }
-
-  function startEgg(now) {
-    resetEgg();
-    egg.phase = 'dots';
-    egg.t0 = now;
-    egg.lastAct = now;
-    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (_) {} }
-    kick();
-  }
-
-  // 링 위의 [i0 → i1] 구간을 그린다 (인덱스는 순환)
-  function strokeRing(i0, i1, dir) {
-    const r = G.ring, n = r.n - 1;
-    ctx.beginPath();
-    let i = i0, pen = !r.blocked[i];
-    ctx.moveTo(r.x[i], r.y[i]);
-    for (let guard = 0; guard <= n && i !== i1; guard++) {
-      i = (i + dir + n) % n;
-      if (r.blocked[i]) { pen = false; continue; }
-      if (pen) ctx.lineTo(r.x[i], r.y[i]); else ctx.moveTo(r.x[i], r.y[i]);
-      pen = true;
-    }
-    ctx.stroke();
-  }
-
-  function eggTouch(x, y, now) {
-    if (egg.phase !== 'dots') return;
-    const { dots, dotHit } = G;
-    let hit = -1, best = dotHit * dotHit;
-    for (let k = 0; k < dots.length; k++) {
-      const d = (dots[k].x - x) ** 2 + (dots[k].y - y) ** 2;
-      if (d < best) { best = d; hit = k; }
-    }
-    if (hit < 0 || hit === egg.last) return;
-    egg.lastAct = now;
-    const N = dots.length, prev = egg.last;
-    if (prev >= 0) {
-      const fwd = (prev + 1) % N === hit, back = (hit + 1) % N === prev;
-      if (fwd || back) {
-        const key = fwd ? prev : hit;   // 간선 k: 점 k → 점 k+1
-        if (!egg.edges.has(key)) egg.edges.set(key, { from: prev, to: hit, dir: fwd ? 1 : -1, t0: now });
-      }
-    }
-    egg.last = hit;
-    if (egg.edges.size === N) {
-      egg.phase = 'done';
-      egg.doneAt = now;
-    }
-  }
-
-  function drawEgg(now) {
-    if (egg.phase === 'off') return;
-    const { dots, ring } = G;
-    const N = dots.length;
-    const HOLD = 2400, FADE = 1600, IDLE = 9000, IDLE_FADE = 700;
-
-    let master = 1;
-    if (egg.phase === 'dots' && now - egg.lastAct > IDLE && !pressed) {
-      egg.phase = 'fade';
-      egg.fadeFrom = now;
-    }
-    if (egg.phase === 'fade') {
-      master = 1 - (now - egg.fadeFrom) / IDLE_FADE;
-      if (master <= 0) { resetEgg(); return; }
-    }
-    if (egg.phase === 'done') {
-      const t = now - egg.doneAt;
-      if (t > HOLD) master = 1 - (t - HOLD) / FADE;
-      if (master <= 0) { resetEgg(); return; }
-    }
-
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 1.05;
-
-    if (egg.phase === 'done') {
-      // 완성: 살짝 어긋난 두 번째 하트가 남는다
-      const settle = reduce ? 1 : clamp((now - egg.doneAt) / 260, 0, 1);
-      ctx.globalAlpha = 0.62 * master;
-      strokeRing(0, ring.n - 2, 1);
-      ctx.globalAlpha = 0.22 * master * settle;
-      ctx.strokeStyle = GHOST;
-      ctx.lineWidth = 0.8;
-      ctx.save();
-      ctx.translate(0.8, 0.6);
-      strokeRing(0, ring.n - 2, 1);
-      ctx.restore();
-      ctx.globalAlpha = 1;
-      return;
-    }
-
-    // 이어진 구간
-    ctx.globalAlpha = 0.62 * master;
-    for (const ed of egg.edges.values()) {
-      const p = reduce ? 1 : clamp((now - ed.t0) / 200, 0, 1);
-      const a = dots[ed.from].i, b = dots[ed.to].i, n = ring.n - 1;
-      const span = ed.dir > 0 ? (b - a + n) % n : (a - b + n) % n;
-      const end = (a + ed.dir * Math.round(span * p) + n) % n;
-      strokeRing(a, end, ed.dir);
-    }
-
-    // 손가락까지 이어지는 가는 안내선
-    if (pressed && egg.last >= 0 && egg.phase === 'dots') {
-      const d = dots[egg.last];
-      ctx.globalAlpha = 0.45 * master;
-      ctx.strokeStyle = GHOST;
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(d.x, d.y);
-      ctx.lineTo(pX, pY);
-      ctx.stroke();
-    }
-
-    // 점
-    for (let k = 0; k < N; k++) {
-      const appear = reduce ? 1 : clamp((now - egg.t0 - k * 40) / 320, 0, 1);
-      if (appear <= 0) continue;
-      const touched = egg.last === k || [...egg.edges.values()].some((ed) => ed.from === k || ed.to === k);
-      ctx.globalAlpha = (touched ? 0.85 : 0.5) * appear * master;
-      ctx.fillStyle = INK;
-      ctx.beginPath();
-      ctx.arc(dots[k].x, dots[k].y, touched ? 2.1 : 1.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  // ───────────────────────── 루프 ─────────────────────────
-  const staticRnd = () => mulberry32(0x5717c);
-
-  // ───────────────────────── 글자 흔들림 (재생 중에만) ─────────────────────────
-  // 글자마다 기준선에서 위아래·좌우로 조금씩 밀리고 기울어진다. dx·dy는 누적값이라 차이로 넣는다.
-  const TW_N = 12;   // STATICHEARTS
-  const tw = { y: new Float32Array(TW_N), x: new Float32Array(TW_N), r: new Float32Array(TW_N), live: false };
-  function wiggleText() {
-    const lv = reduce ? 0 : A.level;
-    if (lv < 0.01) {
-      if (tw.live) { twEl.removeAttribute('dx'); twEl.removeAttribute('dy'); twEl.removeAttribute('rotate'); tw.live = false; }
-      return;
-    }
-    const fs = G.fs, kick = 1 + A.burst * 1.2;
-    for (let i = 0; i < TW_N; i++) {
-      if (Math.random() < 0.55) {          // 몇 프레임씩 머물렀다 튄다
-        tw.y[i] = (Math.random() * 2 - 1) * fs * 0.11 * lv * kick;
-        tw.x[i] = (Math.random() * 2 - 1) * fs * 0.04 * lv * kick;
-        tw.r[i] = (Math.random() * 2 - 1) * 7 * lv * kick;
-      }
-    }
-    let dx = '', dy = '', rot = '';
-    for (let i = 0; i < TW_N; i++) {
-      dx += (tw.x[i] - (i ? tw.x[i - 1] : 0)).toFixed(2) + ' ';
-      dy += (tw.y[i] - (i ? tw.y[i - 1] : 0)).toFixed(2) + ' ';
-      rot += tw.r[i].toFixed(1) + ' ';
-    }
-    twEl.setAttribute('dx', dx); twEl.setAttribute('dy', dy); twEl.setAttribute('rotate', rot);
-    tw.live = true;
-  }
-
-  function renderOnce(now = performance.now()) {
-    ctx.clearRect(0, 0, G.W, G.H);
-    if (reduce) glitches.length = 0;
-    drawLines(now, reduce && energy < 0.002 ? staticRnd() : Math.random);
-    wiggleText();
-    drawEgg(now);
-  }
-
-  function needsLoop() {
-    return !reduce || energy > 0.002 || pressed || egg.phase !== 'off' || audioLive();
-  }
-
-  function frame(now) {
-    raf = 0;
-    if (document.hidden) return;
-    const dt = Math.min(100, now - (lastNow || now));
-    lastNow = now;
-
-    // 간섭: 누르면 빠르게 커지고, 놓으면 가라앉는다
-    if (pressed) energy += (1 - energy) * (1 - Math.exp(-dt / (reduce ? 160 : 90)));
-    else energy *= Math.exp(-dt / (reduce ? 220 : 420));
-    if (energy < 0.002) energy = 0;
-    const peakScale = reduce ? 0.45 : 1;
-
-    if (!needsLoop()) {
-      lastNow = 0;
-      renderOnce(now);
-      return;
-    }
-
-    // 정전기처럼: 약 30fps로 갱신 (어긋남은 2~5프레임 동안만 남는다)
-    if (now - lastFrame >= 1000 / 30 - 2) {
-      stepStatic(now);
-      stepGlitches(now, now - (lastFrame || now), energy * peakScale);
-      lastFrame = now;
-      const keep = energy;
-      energy = keep * peakScale;
-      renderOnce(now);
-      energy = keep;
-    }
-    raf = requestAnimationFrame(frame);
-  }
-
-  function kick() {
-    if (!raf && !document.hidden) raf = requestAnimationFrame(frame);
-  }
-
-  // ───────────────────────── 입력 ─────────────────────────
-  function local(e) {
-    return [e.clientX - G.left, e.clientY - G.top];
-  }
-  function nearText(x, y) {
-    const { textR, textA, textB, textHit } = G;
-    const r2 = textHit * textHit;
-    for (let i = 0; i < textR.n; i += 2) {
-      if (textR.s[i] < textA - 6 || textR.s[i] > textB + 6) continue;
-      const dx = textR.x[i] - x, dy = textR.y[i] - y;
-      if (dx * dx + dy * dy < r2) return true;
-    }
-    return false;
-  }
-  function cancelLongPress() {
-    if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; }
-  }
-
-  // 자동재생이 막혔다면 첫 터치에서 음악과 반응이 함께 시작된다.
-  // 터치의 pointerdown은 사용자 활성화가 아니므로 pointerup에서도 한 번 더 시도한다.
-  const gestureStart = () => { if (A.firstGesture && !A.on && !A.failed) startSound(); };
-  stage.addEventListener('pointerup', gestureStart);
-  stage.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse') gestureStart(); });
-
-  sndBtn.addEventListener('click', () => {
-    A.firstGesture = false;
-    if (!A.ready) return;
-    if (A.on) stopSound(); else startSound();
-  });
-
-  stage.addEventListener('pointerdown', (e) => {
-    if (pid !== null) return;
-    pid = e.pointerId;
-    try { stage.setPointerCapture(pid); } catch (_) {}
-    pressed = true;
-    [pX, pY] = local(e);
-    downX = pX; downY = pY;
-    const now = performance.now();
-    if (egg.phase === 'off' && nearText(pX, pY)) {
-      lpTimer = setTimeout(() => { lpTimer = 0; startEgg(performance.now()); }, 600);
-    }
-    eggTouch(pX, pY, now);
-    kick();
-  });
-  stage.addEventListener('pointermove', (e) => {
-    if (e.pointerId !== pid) return;
-    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-    const now = performance.now();
-    for (const ev of evs.length ? evs : [e]) {
-      [pX, pY] = local(ev);
-      eggTouch(pX, pY, now);
-    }
-    if (lpTimer && Math.hypot(pX - downX, pY - downY) > 12) cancelLongPress();
-    kick();
-  });
-  const release = (e) => {
-    if (e.pointerId !== pid) return;
-    pid = null;
-    pressed = false;
-    cancelLongPress();
-    egg.last = -1;
-    if (egg.phase === 'dots') egg.lastAct = performance.now();
-    kick();
-  };
-  stage.addEventListener('pointerup', release);
-  stage.addEventListener('pointercancel', release);
-  stage.addEventListener('contextmenu', (e) => e.preventDefault());
-  document.addEventListener('gesturestart', (e) => e.preventDefault());
-
-  // ───────────────────────── 환경 ─────────────────────────
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-      lastNow = 0;
-      pressed = false; pid = null; energy = 0;
-      cancelLongPress();
-      if (A.on) { try { A.player.pauseVideo(); } catch (_) {} }   // 켜짐 상태는 그대로 두고 화면이 돌아오면 이어서
-    } else {
-      if (A.on) { try { A.player.playVideo(); } catch (_) {} }
-      kick();
-    }
-  });
-  const onReduce = () => { reduce = reduceMQ.matches; renderOnce(); kick(); };
-  if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', onReduce); else reduceMQ.addListener(onReduce);
-
-  let resizeQueued = false;
-  const onResize = () => {
-    if (resizeQueued) return;
-    resizeQueued = true;
-    requestAnimationFrame(() => { resizeQueued = false; layout(); kick(); });
-  };
-  addEventListener('resize', onResize);
-  if (window.visualViewport) visualViewport.addEventListener('resize', onResize);
-
-  const boot = () => { layout(); kick(); };
-  if (document.fonts && document.fonts.ready) {
-    layout();                       // 접속 즉시 완성된 하트
-    document.fonts.ready.then(boot);
-  } else boot();
-
-  // 유튜브 플레이어를 불러오고, 준비되면 접속 즉시 소리 있는 재생을 시도한다
-  loadPlayer();
-
-  // 검증용 훅 (UI에는 노출되지 않음)
-  window.__SH = { G, egg, A, get energy() { return energy; } };
-})();
-</script>
+<div id="tab" role="dialog" aria-labelledby="tab-title">
+  <div class="tab-head"><h2 class="tab-title" id="tab-title"></h2><button class="tab-close" type="button" aria-label="닫기">×</button></div>
+  <p class="tab-body"></p>
+</div>
+<script src="./js/backdrop.js?v=10"></script>
+<script src="./js/sound.js?v=6"></script>
+<script src="./js/signal.js?v=8"></script>
+<script src="./js/intro.js?v=34"></script>
 </body>
 </html>
