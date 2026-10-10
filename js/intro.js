@@ -218,8 +218,12 @@ const SEAT = 42 * PS;                             // 꽂혔을 때 소켓 중심
 
 // 그림이 차지하는 영역 (여백 포함, 플러그와 소켓까지)
 const BOX = { x: 130, y: 40, w: 520, h: 2400 };
-const SIZE = 0.7;        // 화면에 꽉 맞춘 크기 대비 실제 크기
+// 세로로 긴 좁은 화면(폰)에선 글자를 작게 줄여 왼쪽 구석에 붙이고, 플레이어는 화면 가운데에 둔다
+const narrow = () => innerWidth < 600 && innerHeight > innerWidth;
+const SIZE = () => (narrow() ? 0.45 : 0.7);   // 화면에 꽉 맞춘 크기 대비 실제 크기
 const anchorX = () => 0.2;   // 그림 중심을 화면 폭의 어디에 둘지 (작을수록 왼쪽)
+const TYPE_LEFT = 210;       // 글자들의 왼쪽 끝 (원본 좌표, 대략)
+const CORNER = 10;           // 좁은 화면에서 글자 왼쪽 끝과 화면 왼쪽 사이 여백 (px)
 const ANCHOR_Y = 0.45;        // 그림 중심을 화면 높이의 어디에 둘지 (작을수록 위)
 // 일자로 떨어짐 → 중력대로 몇 번 튕기며 잦아듦 → 그동안 위에서부터 차례로 풀리며 글자가 됨 (ms)
 const FALL = 620, SETTLE = 1200;
@@ -302,12 +306,12 @@ const LINE = REST.y - START[1];   // 일자 줄의 길이 (실 시작 ~ 플러�
 // 화면비에 맞춰 viewBox를 정한다(그림은 중앙보다 왼쪽). 줄은 화면 위 가장자리 바깥에 매달려 있다.
 function layout() {
   const W = innerWidth, H = innerHeight;
-  const s = Math.min((W * 0.86) / BOX.w, (H * 0.9) / BOX.h) * SIZE;
+  const s = Math.min((W * 0.86) / BOX.w, (H * 0.9) / BOX.h) * SIZE();
   ppu = s;
   // 배경 선(js/backdrop.js)이 실과 같은 굵기로 보이도록 화면 기준 굵기를 알려 준다
   document.documentElement.style.setProperty('--thread-px', `${(9 * s).toFixed(2)}px`);
   const vw = W / s, vh = H / s;
-  const vx = BOX.x + BOX.w / 2 - vw * anchorX();
+  const vx = narrow() ? TYPE_LEFT - CORNER / s : BOX.x + BOX.w / 2 - vw * anchorX();
   // 오른쪽 신호 패널이 좁은 화면에서 글자와 겹치지 않게 글자 오른쪽 끝(화면 px)을 알려 준다
   document.documentElement.style.setProperty('--type-right', `${((TYPE_RIGHT - vx) * s).toFixed(1)}px`);
   const vy = BOX.y + BOX.h / 2 - vh * ANCHOR_Y;

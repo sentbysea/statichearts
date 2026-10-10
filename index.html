@@ -111,6 +111,13 @@
     transform: translateY(-50%);
     pointer-events: none;
   }
+  /* 폰(좁은 세로 화면): 글자는 왼쪽 구석, 플레이어는 화면 정가운데. 글자에 닿지 않는 한 크게 */
+  @media (max-width: 599px) and (orientation: portrait) {
+    #stage {
+      --s: min(400px, 62vw, 47vh, calc((50vw - var(--type-right, 0px) - 10px) / 0.56));
+      left: calc(50% - var(--s) * 0.56);
+    }
+  }
   #photo {
     display: block;
     width: var(--s);
@@ -165,7 +172,7 @@
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
-  /* 신호 패널 (js/signal.js): 꽂기 전엔 정적인 실 한 줄, 꽂으면 소리에 맞춰 출렁인다 */
+  /* 신호 패널 (js/signal.js): 가만히 놓인 실 한 줄 위로 까만 점이 곡을 따라 지나간다 */
   /* 재생바 (js/signal.js): 시간·곡 목록 버튼 / 실 한 줄(= 진행 막대) / 낙서 아이콘 버튼 / 타자기 문구.
      크기는 모두 사진 한 변(--s)에 비례 */
   #signal {
@@ -207,8 +214,8 @@
   #signal .len { display: flex; align-items: center; min-height: 1.4em; }
   #signal .inf svg { width: 2.8em; height: 1.9em; margin: -0.25em -0.3em -0.25em 0; }
   #signal .inf[hidden] { display: none; }
-  /* 실 한 줄: 타이포와 같은 굵기. 끝이 있는 곡을 들을 땐 눌러서 위치를 옮길 수 있다 */
-  #signal .wire { width: 100%; height: calc(var(--s) * 0.14); }
+  /* 실 한 줄: 타이포와 같은 굵기로 가만히 놓여 있고, 까만 점이 곡을 따라 지나간다. 끝이 있는 곡을 들을 땐 눌러서 위치를 옮길 수 있다 */
+  #signal .wire { width: 100%; height: max(22px, calc(var(--s) * 0.09)); }
   #signal .wire path { fill: none; stroke: currentColor; stroke-width: var(--thread-px, 2.4px); stroke-linecap: round; stroke-linejoin: round; }
   #signal .wire.seekable { pointer-events: auto; cursor: pointer; }
   #signal .controls {
@@ -315,7 +322,7 @@
 </div>
 <script src="./js/backdrop.js?v=10"></script>
 <script src="./js/sound.js?v=6"></script>
-<script src="./js/signal.js?v=8"></script>
-<script src="./js/intro.js?v=34"></script>
+<script src="./js/signal.js?v=9"></script>
+<script src="./js/intro.js?v=36"></script>
 </body>
 </html>

@@ -1,7 +1,5 @@
 // 가운데 사진 아래의 재생바: 타이포와 같은 굵기의 실 한 줄(= 진행 막대), 손으로 그은 듯한 낙서 아이콘들, 타자기 문구.
-// 꽂기 전엔 실이 거의 멈춘 채 숨만 쉬고(static) "no signal.", 꽂으면 현이 울리듯 출렁이며 "now playing — …"으로 바뀐다.
-// 출렁임은 기타 줄처럼 몇 개의 배음(양 끝이 붙잡힌 사인 모양)을 겹친 것: 저음이 셀수록 크고 느린 첫 배음이,
-// 고음이 셀수록 작고 빠른 높은 배음이 커진다. 그래서 소리의 날것 파형보다 훨씬 매끈한 실로 보인다.
+// 실은 가만히 놓인 한 줄이고, 그 위를 까만 점이 곡의 진행에 맞춰 지나간다. 꽂기 전엔 "no signal.", 꽂으면 "now playing — …".
 // 보이기/숨기기는 intro.js의 static:shown / static:hidden, 재생 상태는 sound.js의 static:sound 이벤트로 받는다.
 (() => {
   const IDLE = 'no signal.';
@@ -125,16 +123,9 @@
   const btn = { shuffle: $('.shuffle'), prev: $('.prev'), play: $('.play'), next: $('.next'), repeat: $('.repeat') };
 
   // ---------- 실 ----------
-  const N = 64;                          // 실 위의 점 개수
-  const spec = new Uint8Array(1024);
-  // 배음마다: 듣는 주파수 구간(분석 칸, 1칸 ≈ 21.5Hz), 크기, 출렁이는 빠르기(Hz)
-  const MODES = [
-    { from: 2, to: 8, size: 1, speed: 0.9 },       // 저음
-    { from: 8, to: 20, size: 0.55, speed: 1.6 },   // 낮은 중음
-    { from: 20, to: 56, size: 0.35, speed: 2.5 },  // 중음
-    { from: 56, to: 186, size: 0.22, speed: 3.6 }, // 고음
-  ].map((m) => ({ ...m, amp: 0 }));
-  let w = 0, h = 0, mix = 0, raf = 0, clock = 0, last = 0;
+  // 실은 가만히 놓인 한 줄(손으로 그은 듯 아주 살짝만 삐뚤다). 그 위를 까만 점이 곡의 진행에 맞춰 지나간다
+  const N = 24;                          // 실 위의 점 개수
+  let w = 0, h = 0, raf = 0, ys = [];
   let visible = false;
   let st = sound.info();
 
@@ -142,7 +133,10 @@
     w = svg.clientWidth;
     h = svg.clientHeight;
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    head.setAttribute('r', (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--thread-px')) || 2.4) * 1.25);
+    const r = rng(41), tp = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--thread-px')) || 2.4;
+    ys = Array.from({ length: N }, (_, i) => h / 2 + (i && i < N - 1 ? (r() - 0.5) * tp * 0.5 : 0));
+    wire.setAttribute('d', smooth(ys.map((y, i) => [(w * i) / (N - 1), y])));
+    head.setAttribute('r', tp * 2);
   }
 
   // 시간: 1분 55초 → "1.55"
@@ -150,42 +144,16 @@
 
   function frame() {
     raf = 0;
-    const now = performance.now();
-    const dt = last ? Math.max(0, Math.min(0.05, (now - last) / 1000)) : 1 / 60;
-    last = now;
-    clock += dt;
-    const live = st.playing;
-    // 울리는 중이면 출렁이는 쪽으로, 멈추거나 빠지면 다시 정적 쪽으로 천천히 넘어간다
-    mix += ((live ? 1 : 0) - mix) * (1 - Math.exp(-dt * (live ? 2.2 : 3)));
-    const have = mix > 0.002 && sound.spectrum(spec);
-    for (const m of MODES) {
-      let e = 0;
-      if (have) { for (let k = m.from; k < m.to; k++) e += spec[k]; e /= (m.to - m.from) * 255; }
-      // 소리가 세지면 빨리 따라 커지고, 약해지면 천천히 잦아든다 (줄의 여운)
-      m.amp += (e - m.amp) * (1 - Math.exp(-dt * (e > m.amp ? 10 : 3)));
-    }
-    const pts = [];
-    for (let i = 0; i < N; i++) {
-      const x = i / (N - 1);
-      let v = 0;
-      MODES.forEach((m, k) => { v += m.amp * m.size * Math.sin((k + 1) * Math.PI * x) * Math.sin(2 * Math.PI * m.speed * clock + k * 1.7); });
-      const calm = 0.05 * Math.sin(Math.PI * x) * Math.sin(clock * 1.1);   // 정적: 거의 멈춘 숨
-      const y = calm * (1 - mix) + Math.max(-1, Math.min(1, v * 1.6)) * mix;
-      pts.push([w * x, h / 2 - y * h * 0.45]);
-    }
-    wire.setAttribute('d', smooth(pts));
-
-    // 재생 위치: 끝이 있는 곡이면 실 위를 따라 점이 지나간다
     const info = sound.info();
     timeEl.textContent = clockText(info.t);
-    if (Number.isFinite(info.dur) && info.dur > 0) {
-      const f = Math.min(1, info.t / info.dur), fi = f * (N - 1), i0 = Math.floor(fi), i1 = Math.min(N - 1, i0 + 1);
-      head.setAttribute('cx', (w * f).toFixed(1));
-      head.setAttribute('cy', (pts[i0][1] + (pts[i1][1] - pts[i0][1]) * (fi - i0)).toFixed(1));
-    }
-    if (MOTION && (visible || mix > 0.002)) raf = requestAnimationFrame(frame);
+    // 끝이 있는 곡은 진행만큼, 끝없는 곡은 실 왼쪽 끝에 머문다
+    const f = Number.isFinite(info.dur) && info.dur > 0 ? Math.max(0, Math.min(1, info.t / info.dur)) : 0;
+    const fi = f * (N - 1), i0 = Math.floor(fi), i1 = Math.min(N - 1, i0 + 1);
+    head.setAttribute('cx', (w * f).toFixed(1));
+    head.setAttribute('cy', ((ys[i0] || h / 2) + ((ys[i1] || h / 2) - (ys[i0] || h / 2)) * (fi - i0)).toFixed(1));
+    if (visible && st.playing) raf = requestAnimationFrame(frame);
   }
-  const kick = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
 
   // ---------- 타자기 문구 ----------
   let typing = 0, goal = '';
@@ -243,7 +211,6 @@
     btn.repeat.setAttribute('aria-label', `반복: ${{ all: '전체', one: '한 곡', off: '끔' }[st.repeat]}`);
     durEl.textContent = finite ? clockText(st.dur) : '';
     infEl.hidden = finite;
-    head.style.display = finite ? '' : 'none';
     svg.classList.toggle('seekable', finite && st.plugged);
     list.innerHTML = st.titles.map((t, i) => `<li><button type="button" data-i="${i}"${i === st.index ? ' aria-current="true"' : ''}>${String(i + 1).padStart(2, '0')}  ${t}</button></li>`).join('');
     if (visible) type(caption());
@@ -273,6 +240,7 @@
     if (!svg.classList.contains('seekable')) return;
     const r = svg.getBoundingClientRect();
     sound.seek((e.clientX - r.left) / r.width);
+    kick();
   });
 
   // ---------- 이벤트 ----------
@@ -284,7 +252,7 @@
     size();
     goal = '';
     sync();
-    if (!MOTION) frame();
+    kick();
   });
   addEventListener('static:hidden', () => {
     visible = false;
@@ -301,7 +269,7 @@
   addEventListener('static:unplugged', sync);
   addEventListener('resize', () => {
     size();
-    if (!MOTION) frame();
+    kick();
   });
   size();
   sync();
