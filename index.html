@@ -79,7 +79,6 @@
 <div id="safe"></div>
 <div id="stage">
   <div id="obj">
-    <canvas id="base"></canvas>
     <canvas id="fx"></canvas>
     <svg id="type" aria-hidden="true" focusable="false">
       <defs><path id="baseline" d="M0 0"/></defs>
@@ -97,33 +96,42 @@
 
   const $ = (id) => document.getElementById(id);
   const safeEl = $('safe'), stage = $('stage'), obj = $('obj');
-  const cvBase = $('base'), cvFx = $('fx');
+  const cvFx = $('fx');
   const svg = $('type'), titleEl = $('title'), tpath = $('tpath'), baselineEl = $('baseline'), measureEl = $('measure');
-  const bctx = cvBase.getContext('2d');
   const ctx = cvFx.getContext('2d');
 
   // ───────────────────────── 형태 (단위 좌표, 하트 폭 ≈ 1) ─────────────────────────
-  // 바람(홍지원): 하트 안쪽의 열린 끝에서 출발 → 골짜기에서 교차 → 넓고 유연한 왼쪽 둥근 부분 → 아래 끝
+  // 윤곽은 오른쪽 절반 하나를 좌우로 뒤집어 쓴다 → 두 봉우리의 높이·너비·곡률이 같고 아래 끝은 x = 0.
+  const mir = (seg) => seg.map(([x, y]) => [-x, y]);
+  const rev = (seg) => seg.slice().reverse();
+  function splitBez(p, t) {
+    const L = (a, b) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    const ab = L(p[0], p[1]), bc = L(p[1], p[2]), cd = L(p[2], p[3]);
+    const abc = L(ab, bc), bcd = L(bc, cd), m = L(abc, bcd);
+    return [[p[0], ab, abc, m], [m, bcd, cd, p[3]]];
+  }
+  const R_TOP = [[0.000, -0.250], [0.045, -0.330], [0.140, -0.470], [0.270, -0.470]];   // 골짜기 → 봉우리
+  const R_SIDE = [[0.270, -0.470], [0.420, -0.470], [0.520, -0.360], [0.520, -0.200]];  // 봉우리 → 바깥 최대폭
+  const R_LOW = [[0.520, -0.200], [0.522, 0.070], [0.300, 0.272], [0.000, 0.500]];      // 바깥 → 아래 끝 (바깥으로 부푼 곡선)
+  const [LOW_OUT, LOW_TIP] = splitBez(R_LOW, 0.24);
+
+  // 바람(홍지원): 하트 안쪽의 열린 끝에서 출발 → 골짜기에서 교차 → 왼쪽 봉우리 → 아래 끝
   const WIND_SEGS = [
-    [[0.125, -0.055], [0.085, -0.120], [0.030, -0.200], [0.000, -0.250]],
-    [[0.000, -0.250], [-0.045, -0.325], [-0.140, -0.475], [-0.275, -0.472]],
-    [[-0.275, -0.472], [-0.410, -0.470], [-0.525, -0.365], [-0.522, -0.200]],
-    [[-0.522, -0.200], [-0.518, -0.020], [-0.200, 0.285], [0.000, 0.500]],
+    [[0.125, -0.040], [0.090, -0.105], [0.028, -0.200], [0.000, -0.250]],
+    mir(R_TOP), mir(R_SIDE), mir(R_LOW),
   ];
   // 글자 구간: 아래 끝 → 오른쪽 아래 윤곽 (STATICHEARTS가 선을 대신한다)
-  const TEXT_SEG = [[0.000, 0.500], [0.130, 0.392], [0.360, 0.212], [0.452, 0.020]];
-  // 번개(차우연): 글자에서 이어받아 오른쪽 윤곽을 팽팽하게 올라가 골짜기를 지나 짧게 끊긴다
+  const TEXT_SEG = rev(LOW_TIP);
+  // 번개(차우연): 글자에서 이어받아 오른쪽 윤곽을 올라가 골짜기를 지나 짧게 끊긴다
   const LIGHT_SEGS = [
-    [[0.452, 0.020], [0.482, -0.040], [0.512, -0.120], [0.504, -0.205]],
-    [[0.504, -0.205], [0.498, -0.355], [0.420, -0.458], [0.250, -0.452]],
-    [[0.250, -0.452], [0.130, -0.448], [0.042, -0.352], [0.000, -0.250]],
-    [[0.000, -0.250], [-0.026, -0.188], [-0.058, -0.128], [-0.082, -0.092]],
+    rev(LOW_OUT), rev(R_SIDE), rev(R_TOP),
+    [[0.000, -0.250], [-0.022, -0.211], [-0.055, -0.150], [-0.080, -0.100]],
   ];
   // 번개 선의 짧은 꺾임 (f: 번개 구간 길이 비율, a: 법선 방향 진폭, w: 폭 — 단위 좌표)
+  // 바깥 윤곽 위의 꺾임은 거의 보이지 않을 만큼만, 안쪽 끝의 꺾임만 또렷하게.
   const KINKS = [
-    { f: 0.115, a: 0.013, w: 0.034 },
-    { f: 0.300, a: -0.009, w: 0.026 },
-    { f: 0.945, a: 0.016, w: 0.038 },
+    { f: 0.200, a: 0.004, w: 0.026 },
+    { f: 0.945, a: 0.011, w: 0.032 },
   ];
   // 숨은 하트: 같은 윤곽을 살짝 돌리고 밀어낸 닫힌 곡선
   const RING_SEGS = [WIND_SEGS[1], WIND_SEGS[2], WIND_SEGS[3], TEXT_SEG, LIGHT_SEGS[0], LIGHT_SEGS[1], LIGHT_SEGS[2]];
@@ -209,8 +217,8 @@
   let energy = 0;          // 간섭 세기 0..1
   let pressed = false, pid = null, pX = -1e4, pY = -1e4, downX = 0, downY = 0;
   let lpTimer = 0;
-  let burst = null;        // 대기 상태의 아주 작은 잡음 폭발
-  let nextBurst = 0;
+  const glitches = [];     // 선의 짧은 구간이 어긋났다 돌아오는 사건들
+  let nextGlitch = 0, nearGlitch = 0;
 
   const egg = { phase: 'off', t0: 0, last: -1, edges: new Map(), lastAct: 0, doneAt: 0, fadeFrom: 0, fadeAlpha: 1 };
 
@@ -239,7 +247,7 @@
 
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     G.dpr = dpr;
-    for (const [cv, c] of [[cvBase, bctx], [cvFx, ctx]]) {
+    for (const [cv, c] of [[cvFx, ctx]]) {
       cv.width = Math.round(W * dpr);
       cv.height = Math.round(H * dpr);
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -265,7 +273,7 @@
       if (fs > 16) fs -= 0.5; else if (ls > 0) ls = Math.max(0, ls - 0.01); else break;
     }
     setFont(titleEl, fs, ls);
-    const gap = fs * 0.5;
+    const gap = fs * 0.42;
 
     // ── 글자 기준선: 윤곽선을 대문자 높이의 절반만큼 바깥으로 밀어, 글자의 가운데가 선 위에 오게 한다
     const capHalf = fs * 0.355;
@@ -307,23 +315,25 @@
       }
     }
 
-    // 잡음 가중치: 글자 쪽 끝은 잦아들어 글자를 침범하지 않게
-    const fadeLen = Math.max(14, fs * 0.9);
+    // 떨림 가중치: 글자와 만나는 끝은 0으로 잦아들어 선이 글자 기준선에 그대로 닿는다
+    const fadeLen = Math.max(18, fs * 1.3);
+    const ease = (v) => v * v * (3 - 2 * v);
     wind.wt = new Float32Array(wind.n);
-    for (let i = 0; i < wind.n; i++) wind.wt[i] = clamp((wind.len - wind.s[i]) / fadeLen, 0.12, 1);
+    for (let i = 0; i < wind.n; i++) wind.wt[i] = ease(clamp((wind.len - wind.s[i]) / fadeLen, 0, 1));
     light.wt = new Float32Array(light.n);
-    for (let i = 0; i < light.n; i++) light.wt[i] = clamp(light.s[i] / fadeLen, 0.12, 1);
+    for (let i = 0; i < light.n; i++) light.wt[i] = ease(clamp(light.s[i] / fadeLen, 0, 1));
 
-    Object.assign(wind, { kind: 'wind', base: 0.42, peak: 6.0, knot: 9, amp: new Float32Array(wind.n) });
-    Object.assign(light, { kind: 'light', base: 0.55, peak: 7.0, knot: 2, amp: new Float32Array(light.n) });
+    // base: 대기 중 미세 떨림(px), peak: 손가락 바로 아래 추가 떨림, knot: 잡음 상관 길이(표본 수)
+    Object.assign(wind, { kind: 'wind', base: 0.3, peak: 4.2, knot: 2, off: new Float32Array(wind.n) });
+    Object.assign(light, { kind: 'light', base: 0.32, peak: 4.8, knot: 2, off: new Float32Array(light.n) });
     G.wind = wind; G.light = light;
-    G.sigma = clamp(S * 0.085, 24, 44);
+    G.sigma = clamp(S * 0.075, 22, 40);
+    glitches.length = 0;
 
     // 글자 손가락 판정용 구간
     G.textHit = Math.max(26, fs * 1.6);
 
     buildRing();
-    drawBase();
     resetEgg();
     renderOnce();
   }
@@ -333,172 +343,136 @@
     el.style.letterSpacing = (fs * ls).toFixed(2) + 'px';
   }
 
-  // ───────────────────────── 고정된 선 ─────────────────────────
-  function drawBase() {
-    const { W, H, wind, light } = G;
-    bctx.clearRect(0, 0, W, H);
-    bctx.strokeStyle = INK;
-    bctx.lineJoin = 'round';
-
-    // 바람: 안쪽의 열린 끝은 가늘게 사라지고, 나머지는 한 획
-    const taper = Math.max(24, G.S * 0.09);
-    bctx.lineCap = 'round';
-    let i = 1;
-    for (; i < wind.n && wind.s[i] < taper; i++) {
-      const t = wind.s[i] / taper;
-      bctx.lineWidth = WIND_W * (0.18 + 0.82 * t * t * (3 - 2 * t));
-      bctx.beginPath();
-      bctx.moveTo(wind.x[i - 1], wind.y[i - 1]);
-      bctx.lineTo(wind.x[i], wind.y[i]);
-      bctx.stroke();
-    }
-    bctx.lineWidth = WIND_W;
-    bctx.beginPath();
-    bctx.moveTo(wind.x[i - 1], wind.y[i - 1]);
-    for (; i < wind.n; i++) bctx.lineTo(wind.x[i], wind.y[i]);
-    bctx.stroke();
-
-    // 번개: 끝이 칼같이 잘린다
-    bctx.lineCap = 'butt';
-    bctx.lineJoin = 'miter';
-    bctx.miterLimit = 6;
-    bctx.lineWidth = LIGHT_W;
-    bctx.beginPath();
-    bctx.moveTo(light.x[0], light.y[0]);
-    for (let j = 1; j < light.n; j++) bctx.lineTo(light.x[j], light.y[j]);
-    bctx.stroke();
-  }
-
-  // ───────────────────────── 가장자리 잡음 ─────────────────────────
+  // ───────────────────────── 선 (매 프레임, 선 자체가 떨린다) ─────────────────────────
+  // 오프셋 = 미세 백색소음 + 짧은 구간 어긋남(glitch) + 손가락 근처 증폭. 윤곽 자체는 고정.
   let knotBuf = new Float32Array(1024);
 
-  function computeAmp(line, e, now) {
+  function fillKnots(n, rnd) {
+    if (knotBuf.length < n) knotBuf = new Float32Array(n * 2);
+    for (let k = 0; k < n; k++) knotBuf[k] = rnd() * 2 - 1;
+  }
+  // 상관 길이 K 표본의 잡음. 바람은 부드럽게, 번개는 각지게 잇는다.
+  function noiseAt(kind, K, i) {
+    const k = Math.floor(i / K), f = (i - k * K) / K;
+    const a = knotBuf[k], b = knotBuf[k + 1];
+    return a + (b - a) * (kind === 'wind' ? f * f * (3 - 2 * f) : f);
+  }
+
+  function spawnGlitch(line, now, at, strong) {
+    const hw = (strong ? 6 : 4) + Math.random() * (strong ? 12 : 9);     // 반폭, px
+    glitches.push({
+      line,
+      c: at,
+      hw,
+      a: (strong ? 2.2 : 1.8) + Math.random() * (strong ? 2.6 : 1.8),   // 진폭, px
+      sgn: Math.random() < 0.5 ? -1 : 1,
+      t0: now,
+      dur: (strong ? 50 : 60) + Math.random() * (strong ? 90 : 110),
+    });
+  }
+
+  function stepGlitches(now, dt, e) {
+    for (let k = glitches.length - 1; k >= 0; k--) if (now - glitches[k].t0 > glitches[k].dur) glitches.splice(k, 1);
+    if (reduce) { glitches.length = 0; return; }
+    const { wind, light } = G;
+    // 대기: 초당 약 9번, 어디선가 짧게 어긋난다
+    if (now >= nextGlitch) {
+      const line = Math.random() < 0.55 ? wind : light;
+      spawnGlitch(line, now, Math.random() * line.len, false);
+      if (Math.random() < 0.3) {
+        const other = line === wind ? light : wind;
+        spawnGlitch(other, now, Math.random() * other.len, false);
+      }
+      nextGlitch = now + 40 + Math.random() * 150;
+    }
+    // 손가락: 가까운 구간에서 더 자주, 더 크게
+    if (e > 0.05 && pressed) {
+      nearGlitch -= dt * e * 0.05;      // 최대 초당 약 50번
+      while (nearGlitch < 0) {
+        nearGlitch += 1;
+        const line = Math.random() < 0.5 ? wind : light;
+        const at = nearestS(line, pX, pY);
+        if (at.d < G.sigma * 2.2) spawnGlitch(line, now, at.s + (Math.random() * 2 - 1) * G.sigma, true);
+      }
+    }
+  }
+
+  function nearestS(line, x, y) {
+    let best = Infinity, s = 0;
+    for (let i = 0; i < line.n; i += 3) {
+      const d = (line.x[i] - x) ** 2 + (line.y[i] - y) ** 2;
+      if (d < best) { best = d; s = line.s[i]; }
+    }
+    return { s, d: Math.sqrt(best) };
+  }
+
+  function computeOffsets(line, e, rnd) {
     const { sigma } = G;
     const inv = 1 / (2 * sigma * sigma);
-    const amp = line.amp;
-    let near = 0;
+    const off = line.off, K = line.knot;
+    fillKnots(Math.ceil(line.n / K) + 2, rnd);
     for (let i = 0; i < line.n; i++) {
       let a = line.base;
       if (e > 0.002) {
         const dx = line.x[i] - pX, dy = line.y[i] - pY;
-        const g = Math.exp(-(dx * dx + dy * dy) * inv);
-        const add = e * line.peak * g;
-        a += add;
-        if (add > 0.6) near++;
+        a += e * line.peak * Math.exp(-(dx * dx + dy * dy) * inv);
       }
-      if (burst && burst.line === line) {
-        const u = (i - burst.i) / burst.w;
-        a += burst.a * Math.exp(-u * u) * Math.sin(Math.PI * clamp((now - burst.t0) / burst.dur, 0, 1));
+      off[i] = noiseAt(line.kind, K, i) * a;
+    }
+    // 어긋남: 구간 전체가 한쪽으로 밀리고, 그 위에 거친 잡음이 얹힌다
+    for (const g of glitches) {
+      if (g.line !== line) continue;
+      const amp = g.a * (0.65 + rnd() * 0.35);
+      let k0 = 0;
+      while (k0 < line.n && line.s[k0] < g.c - g.hw) k0++;
+      for (let i = k0; i < line.n && line.s[i] <= g.c + g.hw; i++) {
+        const u = Math.abs(line.s[i] - g.c) / g.hw;
+        const env = u < 0.55 ? 1 : 1 - (u - 0.55) / 0.45;
+        off[i] += amp * env * (g.sgn * 0.75 + (rnd() * 2 - 1) * 0.6);
       }
-      amp[i] = a * line.wt[i];
     }
-    return near;
+    for (let i = 0; i < line.n; i++) off[i] *= line.wt[i];
   }
 
-  function fillKnots(line, rnd) {
-    const m = Math.ceil(line.n / line.knot) + 2;
-    if (knotBuf.length < m) knotBuf = new Float32Array(m * 2);
-    const spike = line.kind === 'light';
-    for (let k = 0; k < m; k++) {
-      let v = rnd() * 2 - 1;
-      if (spike && rnd() < 0.025) v *= 2.2;
-      knotBuf[k] = v;
-    }
-  }
-  function noiseAt(line, i, rnd) {
-    const K = line.knot, k = Math.floor(i / K), f = (i - k * K) / K;
-    const a = knotBuf[k], b = knotBuf[k + 1];
-    if (line.kind === 'wind') {
-      const s = f * f * (3 - 2 * f);           // 바람: 부드럽게 이어지는 떨림
-      return a + (b - a) * s + (rnd() - 0.5) * 0.35;
-    }
-    return a + (b - a) * f;                      // 번개: 짧고 각진 떨림
-  }
+  const px = (line, i) => line.x[i] + line.nx[i] * line.off[i];
+  const py = (line, i) => line.y[i] + line.ny[i] * line.off[i];
 
-  function jitterPass(line, color, alpha, width, bias, rnd) {
-    fillKnots(line, rnd);
-    const amp = line.amp;
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    for (let i = 0; i < line.n; i++) {
-      const off = noiseAt(line, i, rnd) * amp[i] + bias * amp[i];
-      const x = line.x[i] + line.nx[i] * off, y = line.y[i] + line.ny[i] * off;
-      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
-    }
-    ctx.stroke();
-  }
-
-  function speckles(line, count, rnd, nearOnly) {
-    const amp = line.amp;
-    for (let c = 0; c < count; c++) {
-      let i = (rnd() * line.n) | 0;
-      if (nearOnly) {
-        // 손가락 근처 표본 찾기 (몇 번만 시도)
-        let tries = 0;
-        while (amp[i] < line.base * 2.5 && tries++ < 12) i = (rnd() * line.n) | 0;
-        if (amp[i] < line.base * 2.5) continue;
-      }
-      const off = (rnd() * 2 - 1) * (0.9 + amp[i] * 1.35);
-      const x = line.x[i] + line.nx[i] * off, y = line.y[i] + line.ny[i] * off;
-      const sz = rnd() < 0.78 ? 1 : 1.5;
-      ctx.globalAlpha = (0.18 + rnd() * 0.4) * line.wt[i];
-      ctx.fillStyle = rnd() < 0.3 ? GHOST : INK;
-      ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
-    }
-  }
-
-  function sparks(line, count, rnd) {
-    // 번개 선의 짧은 꺾인 불꽃 — 손가락 근처에서만
-    const amp = line.amp;
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 0.8;
-    ctx.lineJoin = 'miter';
-    for (let c = 0; c < count; c++) {
-      let i = (rnd() * line.n) | 0, tries = 0;
-      while (amp[i] < line.peak * 0.45 && tries++ < 16) i = (rnd() * line.n) | 0;
-      if (amp[i] < line.peak * 0.45) continue;
-      const side = rnd() < 0.5 ? -1 : 1;
-      const nx = line.nx[i] * side, ny = line.ny[i] * side;
-      const tx = -line.ny[i], ty = line.nx[i];
-      const r0 = 1.5 + rnd() * 1.5, r1 = r0 + 2 + rnd() * 3, r2 = r1 + 2 + rnd() * 3;
-      const x0 = line.x[i] + nx * r0, y0 = line.y[i] + ny * r0;
-      ctx.globalAlpha = 0.35 + rnd() * 0.3;
-      ctx.beginPath();
-      ctx.moveTo(x0, y0);
-      ctx.lineTo(line.x[i] + nx * r1 + tx * 2.2, line.y[i] + ny * r1 + ty * 2.2);
-      ctx.lineTo(line.x[i] + nx * r2 - tx * 0.8, line.y[i] + ny * r2 - ty * 0.8);
-      ctx.stroke();
-    }
-  }
-
-  function drawNoise(now, rnd) {
+  function drawLines(now, rnd) {
     const { wind, light } = G;
     const e = energy * (egg.phase === 'off' ? 1 : 0.25);
+    computeOffsets(wind, e, rnd);
+    computeOffsets(light, e, rnd);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = INK;
+
+    // 바람: 안쪽의 열린 끝은 가늘게 사라지고, 나머지는 한 획
+    const taper = Math.max(24, G.S * 0.09);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    const nearW = computeAmp(wind, e, now);
-    const nearL = computeAmp(light, e, now);
-
-    // 바람: 길게 흐르는 떨림 두 겹 (하나는 청회색 잔상)
-    jitterPass(wind, INK, 0.30, 0.7, 0, rnd);
-    jitterPass(wind, GHOST, 0.32, 0.7, 0.55, rnd);
-    if (nearW) jitterPass(wind, INK, 0.16 * Math.min(1, e * 1.5), 0.6, -0.35, rnd);
-
-    // 번개: 촘촘하고 각진 떨림
-    jitterPass(light, INK, 0.30, 0.7, 0, rnd);
-    jitterPass(light, GHOST, 0.32, 0.7, 0.55, rnd);
-
-    // 가장자리 백색소음
-    speckles(wind, Math.round(wind.n / 18), rnd, false);
-    speckles(light, Math.round(light.n / 15), rnd, false);
-    if (nearW) speckles(wind, Math.round(e * 34), rnd, true);
-    if (nearL) {
-      speckles(light, Math.round(e * 40), rnd, true);
-      if (e > 0.3) sparks(light, rnd() < 0.6 ? 1 : 2, rnd);
+    let i = 1;
+    for (; i < wind.n && wind.s[i] < taper; i++) {
+      const t = wind.s[i] / taper;
+      ctx.lineWidth = WIND_W * (0.18 + 0.82 * t * t * (3 - 2 * t));
+      ctx.beginPath();
+      ctx.moveTo(px(wind, i - 1), py(wind, i - 1));
+      ctx.lineTo(px(wind, i), py(wind, i));
+      ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    ctx.lineWidth = WIND_W;
+    ctx.beginPath();
+    ctx.moveTo(px(wind, i - 1), py(wind, i - 1));
+    for (; i < wind.n; i++) ctx.lineTo(px(wind, i), py(wind, i));
+    ctx.stroke();
+
+    // 번개: 끝이 칼같이 잘린다
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 6;
+    ctx.lineWidth = LIGHT_W;
+    ctx.beginPath();
+    ctx.moveTo(px(light, 0), py(light, 0));
+    for (let j = 1; j < light.n; j++) ctx.lineTo(px(light, j), py(light, j));
+    ctx.stroke();
   }
 
   // ───────────────────────── 숨은 하트 ─────────────────────────
@@ -674,7 +648,8 @@
 
   function renderOnce(now = performance.now()) {
     ctx.clearRect(0, 0, G.W, G.H);
-    drawNoise(now, reduce && energy < 0.002 ? staticRnd() : Math.random);
+    if (reduce) glitches.length = 0;
+    drawLines(now, reduce && energy < 0.002 ? staticRnd() : Math.random);
     drawEgg(now);
   }
 
@@ -694,24 +669,15 @@
     if (energy < 0.002) energy = 0;
     const peakScale = reduce ? 0.45 : 1;
 
-    // 대기 중 아주 가끔, 짧은 구간만 지직
-    if (!reduce) {
-      if (burst && now - burst.t0 > burst.dur) burst = null;
-      if (!burst && now > nextBurst) {
-        const line = Math.random() < 0.6 ? G.light : G.wind;
-        burst = { line, i: (Math.random() * line.n) | 0, w: 8 + Math.random() * 10, a: 0.9 + Math.random() * 0.8, t0: now, dur: 120 + Math.random() * 120 };
-        nextBurst = now + 1800 + Math.random() * 3200;
-      }
-    } else burst = null;
-
     if (!needsLoop()) {
       lastNow = 0;
       renderOnce(now);
       return;
     }
 
-    // 정전기처럼: 약 24fps로 갱신
-    if (now - lastFrame >= 1000 / 24 - 2) {
+    // 정전기처럼: 약 30fps로 갱신 (어긋남은 2~5프레임 동안만 남는다)
+    if (now - lastFrame >= 1000 / 30 - 2) {
+      stepGlitches(now, now - (lastFrame || now), energy * peakScale);
       lastFrame = now;
       const keep = energy;
       energy = keep * peakScale;
